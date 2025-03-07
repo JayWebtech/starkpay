@@ -58,7 +58,7 @@ const JoinUs = () => {
 
   return (
     <div
-      className={`py-[7em] container mx-auto px-4 sm:px-10 md:px-8 lg:px-16 relative`}
+      className={`pt-[2em] lg:pt-[4em] container mx-auto px-4 sm:px-10 md:px-8 lg:px-16 relative`}
       ref={targetRef}
     >
       {cards.map((item, index) => {
@@ -69,7 +69,7 @@ const JoinUs = () => {
               opacity: animation[index + 1].opacity,
             }}
             key={index}
-            className="hero-card  border-[1px] w-full border-stroke rounded-lg backdrop-blur-lg flex flex-col justify-center items-center gap-5 p-10 lg:p-[5em] mx-auto sticky mb-2"
+            className="hero-card  border-[1px] w-full border-stroke rounded-lg backdrop-blur-lg flex flex-col justify-center items-center gap-5 p-5 lg:p-[5em] mx-auto sticky mb-2"
           >
             <div className="max-w-3xl flex flex-col gap-5 items-center">
               <motion.h4
