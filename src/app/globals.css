@@ -20,6 +20,7 @@
   background: linear-gradient(180deg, #6c17d4, #a869f4);
 }
 
+
 * {
   scrollbar-width: thin;
   scrollbar-color: #a869f4 #6c17d4;
@@ -28,7 +29,6 @@
 body {
   font-family: var(--font-sora);
   background-color: #06000d;
-  height: 100%;
 }
 
 .page-wrapper {
@@ -37,10 +37,8 @@ body {
   background-repeat: no-repeat;
   background-size: 100% 100%;
   background-attachment: scroll;
-  height: 700vh;
 }
 
 .hero-card {
-  -webkit-backdrop-filter: blur(1.95rem);
   background-image: radial-gradient(circle, #864fcb00, #864fcb73);
 }

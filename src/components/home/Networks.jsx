@@ -21,7 +21,7 @@ const Networks = () => {
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
-      className="container mx-auto px-4 sm:px-10 md:px-8 lg:px-16 py-[5em]"
+      className="container mx-auto px-4 sm:px-10 md:px-8 lg:px-16 pt-[7em]"
     >
       <motion.div className="grid grid-cols-1 md:grid-cols-5 gap-10 items-center">
         <motion.div variants={textVariants} className="md:col-span-3">

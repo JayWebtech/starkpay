@@ -1,4 +1,5 @@
 import Hero from "@/components/home/Hero";
+import JoinUs from "@/components/home/JoinUs";
 import Networks from "@/components/home/Networks";
 import WhyChooseUs from "@/components/home/WhyChooseUs";
 import Navbar from "@/components/layouts/Navbar";
@@ -11,6 +12,7 @@ export default function Home() {
       <Hero />
       <WhyChooseUs />
       <Networks />
+      <JoinUs />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Button from "../form/Button";
+import { Parallax } from "react-scroll-parallax";
 
 const Hero = () => {
   return (

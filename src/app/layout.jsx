@@ -1,5 +1,6 @@
-import {  Orbitron, Sora } from "next/font/google";
+import { Orbitron, Sora } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./providers";
 
 const sora = Sora({
   variable: "--font-sora",
@@ -19,10 +20,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${sora.variable} ${orbitron.variable} antialiased`}
-      >
-        {children}
+      <body className={`${sora.variable} ${orbitron.variable} antialiased`}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
