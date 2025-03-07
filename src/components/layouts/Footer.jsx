@@ -41,12 +41,12 @@ const Footer = () => {
       className="container mx-auto px-4 sm:px-10 md:px-8 lg:px-16 pt-[2em] lg:py-[4em]"
     >
       <div className="hero-card border-[1px] w-full border-stroke rounded-lg flex flex-col gap-5 p-5 py-6 lg:p-[5em] mx-auto sticky mb-2 backdrop-opacity-60 backdrop-blur-3xl">
-        <nav className="flex flex-col gap-10 text-gray-700 dark:text-gray-300">
+        <nav className="flex flex-col gap-10 text-white">
           {footerItems.map((item, index) => (
             <a
               key={index}
               href={item.link}
-              className="flex items-center gap-2 lg:text-[2em] hover:text-primary transition"
+              className="flex items-center gap-2 text-[1em] lg:text-[2em] hover:text-primary transition"
             >
               {item.name}
               {item.icon}
