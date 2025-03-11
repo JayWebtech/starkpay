@@ -40,7 +40,7 @@ const JoinUs = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
             key={index}
-            className={`hero-card  border-[1px] w-full border-stroke backdrop-blur-lg flex flex-col justify-center items-center gap-5 p-5 lg:p-[2em] mx-auto sticky ${index == 0 ? 'rounded-t-lg lg:rounded-l-lg' : index == 2 ? 'rounded-b-lg lg:rounded-r-lg' : ''}`}
+            className={`hero-card  border-[1px] w-full border-stroke backdrop-blur-lg flex flex-col justify-center items-center gap-5 p-5 lg:p-[2em] mx-auto sticky ${index == 0 ? 'rounded-t-lg lg:rounded-l-lg lg:rounded-t-none' : index == 2 ? 'rounded-b-lg lg:rounded-r-lg lg:rounded-bl-none' : ''}`}
           >
             <div className="flex flex-col gap-5 items-center">
               <motion.h4
