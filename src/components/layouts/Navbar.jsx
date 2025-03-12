@@ -22,7 +22,7 @@ const Navbar = () => {
         >
           <Link href={"/"}>
             <h1 className="text-2xl font-bold text-white">
-              Stark<span className="text-primary">Pay</span>
+              $tark<span className="text-primary">Pay</span>
             </h1>
           </Link>
         </motion.div>

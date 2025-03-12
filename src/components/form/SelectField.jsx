@@ -6,7 +6,8 @@ export default function SelectField({
   label,
   required = false,
   networkLogo,
-  disabled
+  disabled,
+  type = "dataplan",
 }) {
   return (
     <div className="relative mb-4">
@@ -27,7 +28,9 @@ export default function SelectField({
           id={id}
           value={value}
           onChange={onChange}
-          className="appearance-none text-white ring-[1px] ring-primary rounded-lg w-full py-3 px-4 text-background leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all bg-transparent pr-12"
+          className={`appearance-none text-white ring-2 ring-primary rounded-lg w-full py-3 px-4 text-background leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all bg-transparent ${
+            networkLogo ? "pr-12" : ""
+          }`}
           required={required}
           disabled={disabled}
         >
@@ -35,8 +38,21 @@ export default function SelectField({
             Select an option
           </option>
           {options.map((option, index) => (
-            <option key={index} value={option.value}>
-              {option.label}
+            <option
+              key={index}
+              value={
+                type === "dataplan" ? option.PRODUCT_ID : option.PACKAGE_ID
+              }
+            >
+              {type === "dataplan" ? (
+                <>
+                  {option.PRODUCT_NAME} - ₦{option.PRODUCT_AMOUNT}
+                </>
+              ) : (
+                <>
+                  {option.PACKAGE_NAME}
+                </>
+              )}
             </option>
           ))}
         </select>

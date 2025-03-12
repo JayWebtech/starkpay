@@ -1,111 +1,116 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import InputField from "../form/InputField";
 import Tabs from "./Tabs";
 import Button from "../form/Button";
 import axios from "axios";
 import toast from "react-hot-toast";
 import SelectField from "../form/SelectField";
-import { GetDataPlans } from "@/services/endpoints";
-
-const providers = [
-  {
-    name: "MTN",
-    logo: "/logos/mtn.jpg",
-    code: "BIL104",
-    prefixes: [
-      "0803",
-      "0703",
-      "0903",
-      "0806",
-      "0706",
-      "0813",
-      "0810",
-      "0814",
-      "0816",
-      "0906",
-      "0913",
-    ],
-  },
-  {
-    name: "Glo",
-    logo: "/logos/glo.svg",
-    code: "BIL105",
-    prefixes: ["0805", "0807", "0705", "0811", "0815", "0905", "0915"],
-  },
-  {
-    name: "Airtel",
-    logo: "/logos/airtel.jpg",
-    code: "BIL106",
-    prefixes: [
-      "0802",
-      "0808",
-      "0708",
-      "0701",
-      "0812",
-      "0901",
-      "0902",
-      "0904",
-      "0907",
-      "0912",
-    ],
-  },
-  {
-    name: "9Mobile",
-    logo: "/logos/9mobile.jpg",
-    code: "BIL107",
-    prefixes: ["0809", "0817", "0818", "0908", "0909"],
-  },
-];
+import { NetworkProviders } from "@/data/NetworkProviders";
+import { TVProviders } from "@/data/TVProviders";
+import { motion } from "framer-motion";
+import LoadingIndicator from "../loader/LoadingIndicator";
 
 const PurchaseForm = () => {
   const [activeTab, setActiveTab] = useState("buy-data");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [amount, setAmount] = useState("");
   const [networkLogo, setNetworkLogo] = useState(null);
   const [dataPlans, setDataPlans] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedTV, setSelectedTV] = useState(null);
+  const [tVPlans, setTVPlans] = useState(null);
+  const [selectedTVPlan, setSelectedTVPlan] = useState("");
+  const [IUCNumber, setIUCNumber] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const detectProvider = (number) => {
     if (number.length >= 4) {
       const prefix = number.slice(0, 4);
-      const provider = providers.find((p) => p.prefixes.includes(prefix));
+      const provider = NetworkProviders.find((p) =>
+        p.prefixes.includes(prefix)
+      );
 
       if (provider) {
         setNetworkLogo(provider.logo);
-        if(!dataPlans){
-          getDataPlans(provider.code);
+        if (!dataPlans && activeTab === "buy-data") {
+          getDataPlans(provider.name);
         }
       } else {
+        toast.error("You entered an invalid number");
         setNetworkLogo(null);
       }
     } else {
+      setDataPlans(null);
       setNetworkLogo(null);
     }
   };
 
-  const handlePhoneNumberChange = (e) => {
-    const value = e.target.value;
-    setPhoneNumber(value);
-    detectProvider(value);
-  };
-
-  const getDataPlans = async (code) => {
-    try {
-      const response = await GetDataPlans(code);
-
-      if (response.data.status == "success") {
-        setDataPlans(response.data.data);
-      }
-    } catch (error) {
-     // toast.error(error?.message || "Failed to fetch data plans");
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "phoneNumber") {
+      setPhoneNumber(value);
+      detectProvider(value);
+    } else if (name === "amount") {
+      setAmount(value);
+    } else if (name === "IUCNumber") {
+      setIUCNumber(value);
     }
   };
-  
+
+  const getDataPlans = async (network) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.post("/api/get-data-plans", { network });
+      if (response.data.status) {
+        setDataPlans(response?.data?.data[0]?.PRODUCT);
+      }
+    } catch (error) {
+      toast.error(error?.message || "Failed to fetch data plans");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getTVPlans = async (providerCode) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.post("/api/get-cable-plans", {
+        providerCode,
+      });
+      if (response.data.status) {
+        setTVPlans(response.data.data);
+      } else {
+        toast.error(response?.msg);
+      }
+    } catch (error) {
+      toast.error(error?.message || "Failed to fetch data plans");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedTV) {
+      getTVPlans(selectedTV.name);
+    }
+  }, [selectedTV]);
 
   return (
     <div className="container mx-auto px-4 sm:px-10 md:px-8 lg:px-16 pt-10">
       <div className="max-w-2xl mx-auto">
-        <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        {isLoading && (
+          <LoadingIndicator />
+        )}
+        <Tabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          setPhoneNumber={setPhoneNumber}
+          setNetworkLogo={setNetworkLogo}
+          setDataPlans={setDataPlans}
+          setIsLoading={setIsLoading}
+          isLoading={isLoading}
+        />
 
         <div className="hero-card border-[1px] border-stroke rounded-lg flex flex-col gap-3 p-8 backdrop-blur-xl mt-5">
           {activeTab === "buy-data" && (
@@ -114,17 +119,17 @@ const PurchaseForm = () => {
                 label="Phone Number"
                 placeholder="Enter phone number"
                 value={phoneNumber}
-                onChange={handlePhoneNumberChange}
+                name="phoneNumber"
+                onChange={handleInputChange}
                 networkLogo={networkLogo}
                 type="numeric"
                 max={11}
               />
               {dataPlans && (
                 <SelectField
-                  value={selectedNetwork}
                   onChange={(e) => setSelectedPlan(e.target.value)}
                   label="Select data plans"
-                  options={selectedPlan}
+                  options={dataPlans}
                   required={true}
                 />
               )}
@@ -136,21 +141,82 @@ const PurchaseForm = () => {
               <InputField
                 label="Phone Number"
                 placeholder="Enter phone number"
+                name="phoneNumber"
                 value={phoneNumber}
-                onChange={handlePhoneNumberChange}
-                networkLogo={networkLogo[0]}
+                onChange={handleInputChange}
+                networkLogo={networkLogo}
+                max={11}
               />
-              
+
+              <InputField
+                type="number"
+                name="amount"
+                label="Airtime Amount"
+                placeholder="Enter amount"
+                value={amount}
+                onChange={handleInputChange}
+              />
             </>
           )}
 
           {activeTab === "pay-cable" && (
             <>
-              <InputField label="Cable Provider" placeholder="Enter provider" />
-              <InputField
-                label="Smart Card Number"
-                placeholder="Enter smart card number"
-              />
+              <label className="block text-sm font-bold text-white">
+                Select Cable Provider
+              </label>
+              <div className="flex gap-4 mb-4">
+                {TVProviders.map((provider) => (
+                  <button
+                    key={provider.code}
+                    className={`p-2 border ring-1 ring-primary rounded-lg flex items-center gap-3 transition-all cursor-pointer duration-200
+            ${selectedTV?.code === provider?.code ? "ring-2 bg-primary" : ""}`}
+                    onClick={() =>
+                      setSelectedTV({
+                        name: provider.name,
+                        code: provider.code,
+                      })
+                    }
+                  >
+                    <img
+                      src={provider.img}
+                      alt={provider.name}
+                      className="w-full h-10 object-contain rounded-md"
+                    />
+                  </button>
+                ))}
+              </div>
+
+              {isLoading && (<span className="text-white">Please wait...</span>)}
+
+              {tVPlans && !isLoading && (
+                <>
+                  <SelectField
+                    onChange={(e) => setSelectedTVPlan(e.target.value)}
+                    label="Select TV plans"
+                    options={tVPlans}
+                    required={true}
+                    type="TV"
+                  />
+                  <InputField
+                    label="SC/IUC Number"
+                    placeholder="Enter SC/IUC Number"
+                    name="IUCNumber"
+                    value={IUCNumber}
+                    type="number"
+                    onChange={handleInputChange}
+                  />
+                  <InputField
+                    label="Phone Number"
+                    placeholder="Enter phone number"
+                    value={phoneNumber}
+                    name="phoneNumber"
+                    onChange={handleInputChange}
+                    networkLogo={networkLogo}
+                    type="numeric"
+                    max={11}
+                  />
+                </>
+              )}
             </>
           )}
 

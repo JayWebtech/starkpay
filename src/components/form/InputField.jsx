@@ -8,6 +8,7 @@ export default function InputField({
     required = false,
     networkLogo,
     max,
+    name
   }) {
     return (
       <div className="relative mb-4">
@@ -25,12 +26,13 @@ export default function InputField({
             />
           )}
           <input
+            name={name}
             type={type}
             id={id}
             value={value}
             onChange={onChange}
             placeholder={placeholder}
-            className="appearance-none text-white ring-[1px] ring-primary rounded-lg w-full py-3 px-4 text-background leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all bg-transparent pr-12"
+            className={`appearance-none text-white ring-2 ring-primary rounded-lg w-full py-3 px-4 text-background leading-tight focus:outline-none focus:ring-2 focus:ring-primary transition-all bg-transparent ${networkLogo ? 'pr-12' : ''}`}
             required={required}
             maxLength={max}
           />

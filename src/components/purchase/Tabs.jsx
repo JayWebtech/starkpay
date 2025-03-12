@@ -1,6 +1,6 @@
 import { Database, PhoneCall, Tv, Lightbulb, FileText } from "lucide-react";
 
-const Tabs = ({ activeTab, setActiveTab }) => {
+const Tabs = ({ activeTab, setActiveTab, setPhoneNumber, setNetworkLogo, setDataPlans, setIsLoading, isLoading }) => {
   const tabs = [
     { name: "Buy data", id: "buy-data", icon: <Database size={26} /> },
     { name: "Buy airtime", id: "buy-airtime", icon: <PhoneCall size={26} /> },
@@ -10,7 +10,7 @@ const Tabs = ({ activeTab, setActiveTab }) => {
   ];
 
   return (
-    <div className="flex justify-center hero-card border-[1px] w-full border-stroke backdrop-blur-xl py-6 px-2 rounded-lg">
+    <div className={`flex justify-center hero-card border-[1px] w-full border-stroke backdrop-blur-xl py-6 px-2 ${isLoading ? 'rounded-b-lg' : 'rounded-lg'}`}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -19,7 +19,10 @@ const Tabs = ({ activeTab, setActiveTab }) => {
               ? "border-b-2 border-primary text-primary"
               : "text-white"
           }`}
-          onClick={() => setActiveTab(tab.id)}
+          onClick={() => {
+            setIsLoading(false)
+            setActiveTab(tab.id)
+          }}
         >
           <span className="flex items-center flex-col gap-2">
             {tab.icon} {tab.name}

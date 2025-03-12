@@ -47,7 +47,7 @@ const WhyChooseUs = () => {
             key={index}
             variants={cardVariants}
             whileHover="hover"
-            className="relative rounded-xl overflow-hidden shadow-lg h-[20em]"
+            className="relative rounded-xl overflow-hidden shadow-lg h-[20em] hero-card"
           >
             {feature.video && (
               <motion.video
