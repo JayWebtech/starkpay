@@ -45,6 +45,8 @@ export default function SelectField({
                 ? option.PRODUCT_ID
                 : type === "electric"
                 ? option.code
+                : type === "betting"
+                ? option.PRODUCT_CODE
                 : option.PACKAGE_ID
             }
           >
@@ -55,6 +57,10 @@ export default function SelectField({
             ) : type === "electric" ? (
               <>
                 {option.name}
+              </>
+            ) : type === "betting" ? (
+              <>
+                {option.PRODUCT_CODE.toUpperCase()}
               </>
             ) : (
               <>

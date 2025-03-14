@@ -11,6 +11,7 @@ import { TVProviders } from "@/data/TVProviders";
 import { motion } from "framer-motion";
 import LoadingIndicator from "../loader/LoadingIndicator";
 import { ElectricityProviders } from "@/data/ElectricityCompany";
+import { BetterProviders } from "@/data/BettingProviders";
 
 const PurchaseForm = () => {
   const [activeTab, setActiveTab] = useState("buy-data");
@@ -105,6 +106,7 @@ const PurchaseForm = () => {
 
       if (response.data.status) {
         setUtilityPlans(response.data.data);
+        setSelectedUtilityPlan(null);
       } else {
         toast.error("No plans found for this provider");
         setUtilityPlans([]);
@@ -192,7 +194,7 @@ const PurchaseForm = () => {
                   <button
                     key={provider.code}
                     className={`p-2 ring-1 ring-primary rounded-lg flex items-center gap-3 transition-all cursor-pointer duration-200
-            ${selectedTV?.code === provider?.code ? "ring-2 bg-primary" : ""}`}
+                    ${selectedTV?.code === provider?.code ? "ring-2 bg-primary" : ""}`}
                     onClick={() =>
                       setSelectedTV({
                         name: provider.name,
@@ -305,13 +307,25 @@ const PurchaseForm = () => {
 
           {activeTab === "betting" && (
             <>
-              <InputField
-                label="Utility Type"
-                placeholder="Enter utility type"
+               <SelectField
+                label="Betting Provider"
+                options={BetterProviders}
+                onChange={(e) => {
+                  
+                }}
+                type="betting"
               />
               <InputField
-                label="Account Number"
-                placeholder="Enter account number"
+                label="Betting"
+                placeholder="Enter betting account"
+              />
+              <InputField
+                type="number"
+                name="amount"
+                label="Airtime Amount"
+                placeholder="Enter amount"
+                value={amount}
+                onChange={handleInputChange}
               />
             </>
           )}

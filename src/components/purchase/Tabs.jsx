@@ -10,7 +10,7 @@ const Tabs = ({ activeTab, setActiveTab, setIsLoading, isLoading }) => {
   ];
 
   return (
-    <div className={`flex justify-center hero-card border-[1px] w-full border-stroke backdrop-blur-xl py-6 px-2 ${isLoading ? 'rounded-b-lg' : 'rounded-lg'}`}>
+    <div className={`flex justify-between hero-card border-[1px] w-full border-stroke backdrop-blur-xl py-6 px-3 lg:px-7 ${isLoading ? 'rounded-b-lg' : 'rounded-lg'}`}>
       {tabs.map((tab) => (
         <button
           key={tab.id}

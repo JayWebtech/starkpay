@@ -1,5 +1,5 @@
 export const ElectricityProviders = [
-    { id: "00", name: "-", code: "-" },
+    { id: "00", name: "Select provider", code: "-" },
     { id: "01", name: "Eko Electric - EKEDC (PHCN)", code: "EKO_ELECTRIC" },
     { id: "02", name: "Ikeja Electric - IKEDC (PHCN)", code: "IKEJA_ELECTRIC" },
     { id: "03", name: "Abuja Electric - AEDC", code: "ABUJA_ELECTRIC" },
