@@ -26,7 +26,7 @@ const Networks: React.FC = () => {
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
-      className="container mx-auto px-4 sm:px-10 md:px-8 lg:px-16 pt-[2em] lg:pt-[8em]"
+      className="container mx-auto px-4 sm:px-10 md:px-8 lg:px-16 pt-[5em] lg:pt-[8em]"
     >
       <motion.div className="">
         <motion.div variants={textVariants} className="md:col-span-3">
@@ -36,12 +36,12 @@ const Networks: React.FC = () => {
           <h2 className="text-white text-4xl font-bold mt-3">
             The StarkPay Ecosystem
           </h2>
-          <p className="text-gray-400 mt-4">
+          <p className="text-white mt-4">
             StarkPay leverages the power of StarkNet to offer seamless, low-fee,
             and instant airtime and data purchases.<br></br> No banks, no delays – just
             fast and decentralized transactions using StarkNet tokens.
           </p>
-          <p className="text-gray-400 my-4">
+          <p className="text-white my-4">
             Buy airtime and data from top Nigerian mobile networks effortlessly.
             Experience next-gen payments today!
           </p>
