@@ -77,7 +77,7 @@ export default function SelectField({
             >
               {type === "dataplan" ? (
                 <>
-                  {option.PRODUCT_NAME} - ₦{option.PRODUCT_AMOUNT}
+                  {option.PRODUCT_NAME} - ₦{Math.ceil(option.PRODUCT_AMOUNT)}
                 </>
               ) : type === "electric" ? (
                 <>{option.name}</>

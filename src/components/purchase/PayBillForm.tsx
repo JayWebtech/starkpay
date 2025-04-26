@@ -141,8 +141,13 @@ const PayBillForm: React.FC = () => {
       return;
     }
 
+    if (formState.phoneNumber.length < 11) {
+      toast.error("Phone number must be 11 digits");
+      return;
+    }
+
     if(activeTab === "buy-data") {
-      
+
     }
 
 
