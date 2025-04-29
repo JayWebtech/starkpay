@@ -31,7 +31,7 @@ export function Providers({ children }: ProvidersProps) {
     ArgentMobileConnector.init({
       options: {
         dappName: 'Starkpay',
-        url: window.location.hostname,
+        url: "https://starkpay-seven.vercel.app",
         projectId: "93392c1b1fdd1f4987f02543117520bf"
       }
     }) as StarknetkitConnector,
