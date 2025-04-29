@@ -3,13 +3,14 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import ConnectWalletButton from '../form/ConnectWalletButton';
+import { useAccount } from '@starknet-react/core';
 
 const Navbar: React.FC = () => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const { address } = useAccount();
   return (
     <div className="container mx-auto px-4 sm:px-10 md:px-8 lg:px-16 pt-6">
       <motion.div
-        className="flex justify-between items-center backdrop-blur-xl py-4 px-4 rounded-lg border-[1px] border-stroke font-orbitron"
+        className={`flex justify-between items-center backdrop-blur-xl py-4 px-4 rounded-lg border-[1px] border-stroke font-orbitron ${address ? 'flex-col gap-2 lg:flex-row md:flex-row' : ''}`}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
