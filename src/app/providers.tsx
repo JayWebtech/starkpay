@@ -12,6 +12,8 @@ import { ReactNode } from "react";
 import { InjectedConnector } from "starknetkit/injected";
 import { WebWalletConnector } from "starknetkit/webwallet";
 import { Connector } from "@starknet-react/core";
+import { ArgentMobileConnector } from "starknetkit/argentMobile"
+import { StarknetkitConnector } from "starknetkit";
 
 interface ProvidersProps {
   children: ReactNode;
@@ -26,6 +28,13 @@ export function Providers({ children }: ProvidersProps) {
       options: { id: "braavos", name: "Braavos" },
     }),
     new WebWalletConnector({ url: "https://web.argent.xyz" }),
+    ArgentMobileConnector.init({
+      options: {
+        dappName: 'Starkpay',
+        url: window.location.hostname,
+        projectId: "93392c1b1fdd1f4987f02543117520bf"
+      }
+    }) as StarknetkitConnector,
   ];
 
   return (
