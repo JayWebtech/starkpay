@@ -171,6 +171,10 @@ const PayBillForm: React.FC = () => {
   };
 
   const handlePayment = useCallback(async () => {
+    if(!isMainnet) {
+      toast.error('You are currently on Testnet.');
+      return;
+    }
     if (!address || !account) {
       toast.error('Please connect your wallet to proceed');
       return;
@@ -264,10 +268,10 @@ const PayBillForm: React.FC = () => {
               setSuccessTxHash(txHash);
               setShowSuccessModal(true);
             } else {
-              toast.error(airtimeResponse.data.message || 'Failed to buy airtime');
+              toast.error(airtimeResponse.data.message || 'Failed to buy airtime. You will be refunded');
             }
           } catch (error: any) {
-            toast.error(error?.message || 'Failed to buy airtime');
+            toast.error(error?.message || 'Failed to buy airtime. You will be refunded');
           }
         }
         if (activeTab === 'buy-data') {
@@ -314,10 +318,10 @@ const PayBillForm: React.FC = () => {
               setSuccessTxHash(txHash);
               setShowSuccessModal(true);
             } else {
-              toast.error(cableResponse.data.msg || 'Failed to pay cable');
+              toast.error(cableResponse.data.msg || 'Failed to pay cable. You will be refunded');
             }
           } catch (error: any) {
-            toast.error(error?.message || 'Failed to pay cable');
+            toast.error(error?.message || 'Failed to pay cable. You will be refunded');
           }
         }
 
@@ -341,10 +345,10 @@ const PayBillForm: React.FC = () => {
               setSuccessTxHash(txHash);
               setShowSuccessModal(true);
             } else {
-              toast.error(utilityResponse.data.msg || 'Failed to pay utility');
+              toast.error(utilityResponse.data.msg || 'Failed to pay utility. You will be refunded');
             }
           } catch (error: any) {
-            toast.error(error?.message || 'Failed to pay utility');
+            toast.error(error?.message || 'Failed to pay utility. You will be refunded');
           }
         }
       } else {
