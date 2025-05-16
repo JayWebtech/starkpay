@@ -171,12 +171,10 @@ const PayBillForm: React.FC = () => {
   };
 
   const handlePayment = useCallback(async () => {
-    // if(!isMainnet) {
-    //   toast.error('You are currently on Testnet.');
-    //   return;
-    // }
-
-    
+    if(!isMainnet) {
+      toast.error('You are currently on Testnet.');
+      return;
+    }
     if (!address || !account) {
       toast.error('Please connect your wallet to proceed');
       return;
