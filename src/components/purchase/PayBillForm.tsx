@@ -175,6 +175,8 @@ const PayBillForm: React.FC = () => {
     //   toast.error('You are currently on Testnet.');
     //   return;
     // }
+
+    
     if (!address || !account) {
       toast.error('Please connect your wallet to proceed');
       return;
