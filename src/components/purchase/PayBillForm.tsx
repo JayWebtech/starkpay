@@ -171,10 +171,10 @@ const PayBillForm: React.FC = () => {
   };
 
   const handlePayment = useCallback(async () => {
-    if(!isMainnet) {
-      toast.error('You are currently on Testnet.');
-      return;
-    }
+    // if(!isMainnet) {
+    //   toast.error('You are currently on Testnet.');
+    //   return;
+    // }
     if (!address || !account) {
       toast.error('Please connect your wallet to proceed');
       return;
@@ -259,6 +259,19 @@ const PayBillForm: React.FC = () => {
             });
 
             if (airtimeResponse.data.status) {
+              await axios.post('/api/store-transaction', {
+                amount: formState.amount,
+                txn_type: 'Airtime',
+                wallet_address: address,
+                status: 'success',
+                  reference: txHash,
+                  timestamp: new Date().toISOString(),
+                  refunded: false,
+                  phone_number: formState.phoneNumber,
+                  iuc_number: formState.IUCNumber,
+                  meter_number: formState.meterNumber,
+                  network: networkCode,
+              });
               setFormState({
                 phoneNumber: '',
                 amount: '',
@@ -283,6 +296,19 @@ const PayBillForm: React.FC = () => {
             });
 
             if (dataResponse.data.status) {
+              await axios.post('/api/store-transaction', {
+                amount: formState.amount,
+                txn_type: 'Data',
+                wallet_address: address,
+                status: 'success',
+                  reference: txHash,
+                  timestamp: new Date().toISOString(),
+                  refunded: false,
+                  phone_number: formState.phoneNumber,
+                  iuc_number: formState.IUCNumber,
+                  meter_number: formState.meterNumber,
+                  network: networkCode,
+              });
               setFormState({
                 phoneNumber: '',
                 amount: '',
@@ -309,6 +335,19 @@ const PayBillForm: React.FC = () => {
             });
 
             if (cableResponse.data.status) {
+              await axios.post('/api/store-transaction', {
+                amount: formState.amount,
+                txn_type: 'Cable',
+                wallet_address: address,
+                status: 'success',
+                  reference: txHash,
+                  timestamp: new Date().toISOString(),
+                  refunded: false,
+                  phone_number: formState.phoneNumber,
+                  iuc_number: formState.IUCNumber,
+                  meter_number: formState.meterNumber,
+                  network: networkCode,
+              });
               setFormState({
                 phoneNumber: '',
                 amount: '',
@@ -334,13 +373,25 @@ const PayBillForm: React.FC = () => {
               amount: formState.amount,
               phone_no: formState.phoneNumber,
             });
-
-            if (utilityResponse.data.status) {
+              if (utilityResponse.data.status) {
+              await axios.post('/api/store-transaction', {
+                amount: formState.amount,
+                txn_type: 'Utility',
+                wallet_address: address,
+                status: 'success',
+                  reference: txHash,
+                  timestamp: new Date().toISOString(),
+                  refunded: false,
+                  phone_number: formState.phoneNumber,
+                  iuc_number: formState.IUCNumber,
+                  meter_number: formState.meterNumber,
+                  network: networkCode,
+                });
               setFormState({
-                meterNumber: '',
-                amount: '',
                 phoneNumber: '',
+                amount: '',
                 IUCNumber: '',
+                meterNumber: '',
               })
               setSuccessTxHash(txHash);
               setShowSuccessModal(true);
@@ -382,7 +433,9 @@ const PayBillForm: React.FC = () => {
     if (formState.amount && starkAmount) {
       const ngnAmount = parseFloat(formState.amount);
       const strkPrice = parseFloat(starkAmount);
-      const strkAmount = ((ngnAmount / strkPrice)+1);
+      const baseStrkAmount = (ngnAmount / strkPrice);
+      const feePercentage = 0.02; // 2%
+      const strkAmount = baseStrkAmount + (baseStrkAmount * feePercentage);
       const amountInWei = BigInt(Math.floor(strkAmount * 1e18));
       setAmountInSTRK(Number(amountInWei));
     }
@@ -418,7 +471,7 @@ const PayBillForm: React.FC = () => {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setShowTimeoutModal(true);
-    }, 15 * 60 * 1000); // 15 minutes
+    }, 15 * 60 * 1000);
 
     return () => clearTimeout(timeoutId);
   }, []);

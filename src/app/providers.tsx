@@ -13,6 +13,7 @@ import {
 } from '@starknet-react/core';
 
 import { jsonRpcProvider } from '@starknet-react/core';
+import SupabaseProvider from '@/components/providers/SupabaseProvider';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -56,7 +57,9 @@ export function Providers({ children }: ProvidersProps) {
       explorer={starkscan}
       autoConnect
     >
-      {children}
+      <SupabaseProvider>
+        {children}
+      </SupabaseProvider>
     </StarknetConfig>
   );
 }

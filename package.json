@@ -13,6 +13,8 @@
     "@metamask/browser-passworder": "^6.0.0",
     "@starknet-react/chains": "^3.1.2",
     "@starknet-react/core": "^3.7.2",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.8.2",
     "framer-motion": "^12.4.10",
     "js-cookie": "^3.0.5",
