@@ -1,26 +1,58 @@
 import { NextRequest } from 'next/server';
-import { RpcProvider, shortString } from 'starknet';
+import { RpcProvider, shortString, constants, RPC, num, Call } from 'starknet';
 import * as passworder from '@metamask/browser-passworder';
 import { Account, Contract } from 'starknet';
+import { getSupportedTokens, getContractAddress } from '@/constants/token';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export async function POST(req: NextRequest): Promise<Response> {
   let isMainet: boolean;
   let refcode: string;
+  let amountInSTRK: string;
+
+  let SUPPORTED_TOKENS;
+  let CONTRACT_ADDRESS;
 
   try {
     const body = await req.text();
-    console.log('Received request body:', body);
     
     if (!body) {
-      throw new Error('Empty request body');
+      return new Response(
+        JSON.stringify({
+          status: false,
+          message: 'Empty request body',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     const parsedBody = JSON.parse(body);
     isMainet = parsedBody.isMainet;
     refcode = parsedBody.refcode;
+    amountInSTRK = parsedBody.amountInSTRK;
+
+    SUPPORTED_TOKENS = getSupportedTokens(isMainet);
+    CONTRACT_ADDRESS = getContractAddress(isMainet);
 
     if (typeof isMainet !== 'boolean' || typeof refcode !== 'string') {
-      throw new Error('Invalid request parameters');
+      return new Response(
+        JSON.stringify({
+          status: false,
+          message: 'Invalid request parameters',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
   } catch (error: any) {
     console.error('Error parsing request:', error);
@@ -37,7 +69,52 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   try {
-    console.log('Initializing provider...');
+    // Check transaction status before proceeding
+    const { data: transaction, error: txError } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('refcode', refcode)
+      .single();
+
+    if (txError) {
+      return new Response(
+        JSON.stringify({
+          status: false,
+          message: 'Transaction not found',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    if (transaction.refunded) {
+      return new Response(
+        JSON.stringify({
+          status: false,
+          message: 'Transaction already refunded',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    if (transaction.status !== 'failed') {
+      return new Response(
+        JSON.stringify({
+          status: false,
+          message: 'Only failed transactions can be refunded',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     const provider = new RpcProvider({
       nodeUrl: `${isMainet ? process.env.NEXT_PUBLIC_MAINET_RPC : process.env.NEXT_PUBLIC_SEPOLIA_RPC}`,
     });
@@ -45,78 +122,152 @@ export async function POST(req: NextRequest): Promise<Response> {
     console.log('Checking environment variables...');
     const salt = process.env.NEXT_PRIVATE_STARKPAY_SALT;
     const encryptedKey = process.env.NEXT_PRIVATE_STARKPAY_ENCRYPTED_PRIVATE_KEY;
-    
+
     if (!salt || !encryptedKey) {
-      throw new Error('Missing required environment variables for private key decryption');
+        return new Response(
+          JSON.stringify({
+            status: false,
+            message: 'An expected error occurred, please try again later',
+          }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
     }
 
-    console.log('Attempting to decrypt private key...');
     try {
-        console.log(atob(encryptedKey))
-      const decrypted = await passworder.decrypt(
-        salt,
-        atob(encryptedKey)
-      );
-      
+      console.log(atob(encryptedKey));
+      const decrypted = await passworder.decrypt(salt, atob(encryptedKey));
+
       if (!decrypted) {
-        throw new Error('Decryption failed - no data returned');
+        return new Response(
+          JSON.stringify({
+            status: false,
+            message: 'Decryption failed - no data returned',
+          }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
       }
 
       // connect your account. To adapt to your own account:
       const privateKey0 = decrypted;
       const account0Address = process.env.NEXT_PRIVATE_STARKPAY_ACCOUNT_ADDRESS || '';
-      
+
       if (!account0Address) {
-        throw new Error('Missing account address environment variable');
-      }
-      
-      console.log('Creating account...');
-      const account0 = new Account(provider, account0Address, privateKey0 as string);
-
-      // Connect the deployed Test contract in Testnet
-      const testAddress = process.env.NEXT_PUBLIC_TESTNET_CONTRACT_ADDRESS;
-      console.log('Test contract address:', testAddress);
-
-      // read abi of Test contract
-      console.log('Fetching contract ABI...');
-      const { abi: testAbi } = await provider.getClassAt(testAddress as string);
-      if (testAbi === undefined) {
-        throw new Error('no abi.');
-      }
-      console.log('Creating contract instance...');
-      const myTestContract = new Contract(testAbi, testAddress as string, provider);
-
-      // Connect account with the contract
-      myTestContract.connect(account0);
-
-      console.log('Preparing refund call...');
-      const myCall = myTestContract.populate('refund', [shortString.encodeShortString(refcode)]);
-      console.log('Executing refund transaction...');
-      const res = await myTestContract.refund(myCall.calldata);
-      console.log('Waiting for transaction...');
-      await provider.waitForTransaction(res.transaction_hash);
-
-      return new Response(
+        return new Response(
           JSON.stringify({
-            status: true,
-            message: 'Refund triggered successfully',
+            status: false,
+            message: 'Missing account address environment variable',
           }),
           {
-            status: 200,
+            status: 500,
             headers: { 'Content-Type': 'application/json' },
           }
-        ); 
+        );
+      }
+
+      console.log('Creating account...');
+      const account0 = new Account(
+        provider,
+        account0Address,
+        privateKey0 as string,
+        undefined,
+        constants.TRANSACTION_VERSION.V3
+      );
+
+      const amountInWei = BigInt(Math.floor(Number(amountInSTRK) * 1e18));
+      const pre_amount = Number(amountInWei);
+      const amount = BigInt(pre_amount || 0);
+      const low = amount & BigInt('0xffffffffffffffffffffffffffffffff');
+      const high = amount >> BigInt(128);
+
+      const calls: Call[] = [
+        {
+          entrypoint: 'approve',
+          contractAddress: SUPPORTED_TOKENS.STRK.address,
+          calldata: [CONTRACT_ADDRESS as `0x${string}`, low.toString(), high.toString()],
+        },
+        {
+          entrypoint: 'refund',
+          contractAddress: CONTRACT_ADDRESS as `0x${string}`,
+          calldata: [shortString.encodeShortString(refcode)],
+        },
+      ];
+
+      const maxQtyGasAuthorized = 1800n;
+      const maxPriceAuthorizeForOneGas = 20n * 10n ** 12n;
+      console.log('max authorized cost =', maxQtyGasAuthorized * maxPriceAuthorizeForOneGas, 'FRI');
+      const { transaction_hash: txH } = await account0.execute(calls, {
+        version: 3,
+        maxFee: 10 ** 15,
+        feeDataAvailabilityMode: RPC.EDataAvailabilityMode.L1,
+        tip: 10 ** 13,
+        paymasterData: [],
+        resourceBounds: {
+          l1_gas: {
+            max_amount: num.toHex(maxQtyGasAuthorized),
+            max_price_per_unit: num.toHex(maxPriceAuthorizeForOneGas),
+          },
+          l2_gas: {
+            max_amount: num.toHex(0),
+            max_price_per_unit: num.toHex(0),
+          },
+        },
+      });
+      const txR = await provider.waitForTransaction(txH);
+      if (txR.isSuccess()) {
+        const { error: updateError } = await supabase
+          .from('transactions')
+          .update({ 
+            refunded: true,
+            status: 'refunded'
+          })
+          .eq('refcode', refcode);
+
+          return new Response(
+            JSON.stringify({
+              status: true,
+              message: 'Refund triggered successfully',
+            }),
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
+      }
+
+      return new Response(
+        JSON.stringify({
+          status: false,
+          message: 'Refund failed. Our team will be notified',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     } catch (error: any) {
       console.error('Detailed error:', {
         message: error.message,
         stack: error.stack,
-        name: error.name
+        name: error.name,
       });
 
       let userMessage = 'Error while refunding, our team will be notified';
-      
+
       if (error.message && error.message.includes('Invalid reference code')) {
         userMessage = 'Invalid reference code';
+      }
+      if (error.message && error.message.includes('Transaction already refunded')) {
+        userMessage = 'Transaction already refunded';
+      }
+
+      if (error.message && error.message.includes('Unauthorized caller')) {
+        userMessage = 'Unauthorized caller';
       }
 
       return new Response(
@@ -134,11 +285,11 @@ export async function POST(req: NextRequest): Promise<Response> {
     console.error('Detailed error:', {
       message: error.message,
       stack: error.stack,
-      name: error.name
+      name: error.name,
     });
 
     let userMessage = 'Error while refunding, our team will be notified';
-    
+
     if (error.message && error.message.includes('Invalid reference code')) {
       userMessage = 'Invalid reference code';
     }

@@ -7,21 +7,23 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { 
       amount, 
-      txnType, 
-      walletAddress, 
+      txn_type, 
+      wallet_address, 
       status, 
-      reference, 
       timestamp, 
       refunded,
       // New optional fields
-      phoneNumber,
-      iucNumber,
-      meterNumber,
-      network
+      phone_number,
+      iuc_number,
+      meter_number,
+      network,
+      stark_amount,
+      hash,
+      refcode
     } = body;
 
     // Validate required fields
-    if (!amount || !txnType || !walletAddress || !status || !reference || !timestamp) {
+    if (!amount || !txn_type || !wallet_address || !status || !timestamp || !refcode || !hash) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -30,17 +32,19 @@ export async function POST(request: Request) {
 
     const transaction: Transaction = {
       amount,
-      txn_type: txnType,
-      wallet_address: walletAddress,
+      txn_type,
+      wallet_address,
       status,
-      reference,
       timestamp,
       refunded: refunded || false,
+      hash,
+      refcode,
       // Add optional fields if they exist
-      ...(phoneNumber && { phone_number: phoneNumber }),
-      ...(iucNumber && { iuc_number: iucNumber }),
-      ...(meterNumber && { meter_number: meterNumber }),
-      ...(network && { network: network })
+      ...(phone_number && { phone_number }),
+      ...(iuc_number && { iuc_number }),
+      ...(meter_number && { meter_number }),
+      ...(network && { network }),
+      ...(stark_amount && { stark_amount })
     };
 
     const { data, error } = await supabase
@@ -52,7 +56,7 @@ export async function POST(request: Request) {
     if (error) {
       console.error('Error storing transaction:', error);
       return NextResponse.json(
-        { error: 'Failed to store transaction' },
+        { error: `Failed to store transaction ${error.message}` },
         { status: 500 }
       );
     }

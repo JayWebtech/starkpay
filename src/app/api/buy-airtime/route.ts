@@ -1,13 +1,6 @@
 import axios from 'axios';
 import { NextRequest } from 'next/server';
 
-interface UtilityResponse {
-  status: boolean;
-  data?: any;
-  msg?: string;
-  message?: string;
-}
-
 const getNetworkCode = (networkCode: string) => {
   switch (networkCode) {
     case 'MTN':
@@ -41,16 +34,25 @@ export async function POST(req: NextRequest): Promise<Response> {
       }
     );
 
+    if(response.data.status == "INSUFFICIENT_BALANCE") {
+      return new Response(JSON.stringify({ status: false, data: "An error occurred, you will be refunded now." }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if(response.data.status == "INVALID_RECIPIENT") {
+      return new Response(JSON.stringify({ status: false, data: "Invalid recipient, you will be refunded now." }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ status: true, data: response.data }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
 
-
-    // return new Response(JSON.stringify({ status: true, data: selectedProvider.PRODUCT }), {
-    //   status: 200,
-    //   headers: { 'Content-Type': 'application/json' },
-    // });
   } catch (error: any) {
     return new Response(
       JSON.stringify({

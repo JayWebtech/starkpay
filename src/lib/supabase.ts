@@ -26,4 +26,5 @@ export type Transaction = {
   iuc_number?: string;
   meter_number?: string;
   network?: string;
+  stark_amount?: number;
 }; 

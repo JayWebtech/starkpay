@@ -53,9 +53,11 @@ const PayBillForm: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successTxHash, setSuccessTxHash] = useState('');
   const [networkCode, setNetworkCode] = useState<string | null>(null);
+  const [strkBaseAmount, setStrkBaseAmount] = useState<number | null>(null);
+  const [isRefunded, setIsRefunded] = useState<boolean>(false);
 
   const { address, account } = useAccount();
-  
+
   const [isMainnet, setIsMainnet] = useState<boolean>(true);
   const { chain } = useNetwork();
   const CONTRACT_ADDRESS = getContractAddress(isMainnet);
@@ -171,31 +173,31 @@ const PayBillForm: React.FC = () => {
   };
 
   const handlePayment = useCallback(async () => {
-    if(!isMainnet) {
-      toast.error('You are currently on Testnet.');
-      return;
-    }
+    // if(!isMainnet) {
+    //   toast.error('You are currently on Testnet.');
+    //   return;
+    // }
     if (!address || !account) {
       toast.error('Please connect your wallet to proceed');
       return;
     }
 
-    if(formState.amount === '') {
+    if (formState.amount === '') {
       toast.error('Amount is required');
       return;
     }
 
-    if(parseFloat(formState.amount) < 100) {
+    if (parseFloat(formState.amount) < 100) {
       toast.error('Amount must be greater than 100');
       return;
     }
 
-    if(activeTab === "pay-cable" && selectedTV) {
+    if (activeTab === 'pay-cable' && !selectedTV) {
       toast.error('Please select a TV provider');
       return;
     }
 
-    if(activeTab === "pay-cable" && !formState.IUCNumber) {
+    if (activeTab === 'pay-cable' && !formState.IUCNumber) {
       toast.error('IUC Number is required');
       return;
     }
@@ -221,14 +223,18 @@ const PayBillForm: React.FC = () => {
     }
 
     let refcode = nanoid(10);
+    let base_refcode = refcode;
     refcode = shortString.encodeShortString(refcode);
     let type = getTxnType();
     let txHash = '';
-    
+
     // Handle the amount as a BigInt with proper decimal places
     const amount = BigInt(amountInSTRK || 0);
     const low = amount & BigInt('0xffffffffffffffffffffffffffffffff');
     const high = amount >> BigInt(128);
+    console.log('low', low);
+    console.log('high', high);
+    console.log('amount', amount, amountInSTRK);
 
     try {
       setIsBtnLoading(true);
@@ -249,7 +255,7 @@ const PayBillForm: React.FC = () => {
 
       const receiptStatus = await account.waitForTransaction(txHash);
 
-      if (receiptStatus.statusReceipt === "success") {
+      if (receiptStatus.statusReceipt === 'success') {
         if (activeTab === 'buy-airtime') {
           try {
             const airtimeResponse = await axios.post('/api/buy-airtime', {
@@ -264,27 +270,74 @@ const PayBillForm: React.FC = () => {
                 txn_type: 'Airtime',
                 wallet_address: address,
                 status: 'success',
-                  reference: txHash,
-                  timestamp: new Date().toISOString(),
-                  refunded: false,
-                  phone_number: formState.phoneNumber,
-                  iuc_number: formState.IUCNumber,
-                  meter_number: formState.meterNumber,
-                  network: networkCode,
+                hash: txHash,
+                refcode: base_refcode,
+                timestamp: new Date().toISOString(),
+                refunded: false,
+                phone_number: formState.phoneNumber,
+                iuc_number: formState.IUCNumber,
+                meter_number: formState.meterNumber,
+                network: networkCode,
+                stark_amount: strkBaseAmount,
               });
-              setFormState({
-                phoneNumber: '',
-                amount: '',
-                IUCNumber: '',
-                meterNumber: '',
-              })
               setSuccessTxHash(txHash);
               setShowSuccessModal(true);
             } else {
-              toast.error(airtimeResponse.data.message || 'Failed to buy airtime. You will be refunded');
+              await axios.post('/api/store-transaction', {
+                amount: formState.amount,
+                txn_type: 'Airtime',
+                wallet_address: address,
+                status: 'failed',
+                hash: txHash,
+                refcode: base_refcode,
+                timestamp: new Date().toISOString(),
+                refunded: false,
+                phone_number: formState.phoneNumber,
+                iuc_number: formState.IUCNumber,
+                meter_number: formState.meterNumber,
+                network: networkCode,
+                stark_amount: strkBaseAmount,
+              });
+              toast.error(
+                airtimeResponse.data.message || 'Failed to buy airtime. You will be refunded'
+              );
+              setIsRefunded(true);
+              try {
+                const refundResponse = await axios.post('/api/refund', {
+                  isMainet: isMainnet,
+                  refcode: base_refcode,
+                  amountInSTRK: amountInSTRK,
+                });
+                if (refundResponse.data.status) {
+                  toast.success(
+                    'You refund has been confirmed, please check your wallet for the refund'
+                  );
+                }
+              } catch (error: any) {
+                toast.error(error?.message || 'Failed to refund. Our team has been notified');
+              } finally {
+                setIsRefunded(false);
+              }
             }
           } catch (error: any) {
             toast.error(error?.message || 'Failed to buy airtime. You will be refunded');
+            setIsRefunded(true);
+            try {
+              const refundResponse = await axios.post('/api/refund', {
+                isMainet: isMainnet,
+                refcode: base_refcode,
+                amountInSTRK: amountInSTRK,
+              });
+              if (refundResponse.data.status) {
+                toast.success(
+                  'You refund has been confirmed, please check your wallet for the refund'
+                );
+              }
+            } catch (error: any) {
+              toast.error(error?.message || 'Failed to refund. Our team has been notified');
+            } finally {
+              setIsRefunded(false);
+            }
           }
         }
         if (activeTab === 'buy-data') {
@@ -301,27 +354,72 @@ const PayBillForm: React.FC = () => {
                 txn_type: 'Data',
                 wallet_address: address,
                 status: 'success',
-                  reference: txHash,
-                  timestamp: new Date().toISOString(),
-                  refunded: false,
-                  phone_number: formState.phoneNumber,
-                  iuc_number: formState.IUCNumber,
-                  meter_number: formState.meterNumber,
-                  network: networkCode,
+                hash: txHash,
+                refcode: base_refcode,
+                timestamp: new Date().toISOString(),
+                refunded: false,
+                phone_number: formState.phoneNumber,
+                iuc_number: formState.IUCNumber,
+                meter_number: formState.meterNumber,
+                network: networkCode,
+                stark_amount: strkBaseAmount,
               });
-              setFormState({
-                phoneNumber: '',
-                amount: '',
-                IUCNumber: '',
-                meterNumber: '',
-              })
               setSuccessTxHash(txHash);
               setShowSuccessModal(true);
             } else {
+              await axios.post('/api/store-transaction', {
+                amount: formState.amount,
+                txn_type: 'Data',
+                wallet_address: address,
+                status: 'failed',
+                hash: txHash,
+                refcode: base_refcode,
+                timestamp: new Date().toISOString(),
+                refunded: false,
+                phone_number: formState.phoneNumber,
+                iuc_number: formState.IUCNumber,
+                meter_number: formState.meterNumber,
+                network: networkCode,
+                stark_amount: strkBaseAmount,
+              });
               toast.error(dataResponse.data.msg || 'Failed to buy data');
+              setIsRefunded(true);
+              try {
+                const refundResponse = await axios.post('/api/refund', {
+                  isMainet: isMainnet,
+                  refcode: base_refcode,
+                  amountInSTRK: amountInSTRK,
+                });
+                if (refundResponse.data.status) {
+                  toast.success(
+                    'You refund has been confirmed, please check your wallet for the refund'
+                  );
+                }
+              } catch (error: any) {
+                toast.error(error?.message || 'Failed to refund. Our team has been notified');
+              } finally {
+                setIsRefunded(false);
+              }
             }
           } catch (error: any) {
             toast.error(error?.message || 'Failed to buy data');
+            setIsRefunded(true);
+            try {
+              const refundResponse = await axios.post('/api/refund', {
+                isMainet: isMainnet,
+                refcode: base_refcode,
+                amountInSTRK: amountInSTRK,
+              });
+              if (refundResponse.data.status) {
+                toast.success(
+                  'You refund has been confirmed, please check your wallet for the refund'
+                );
+              }
+            } catch (error: any) {
+              toast.error(error?.message || 'Failed to refund. Our team has been notified');
+            } finally {
+              setIsRefunded(false);
+            }
           }
         }
 
@@ -329,9 +427,10 @@ const PayBillForm: React.FC = () => {
           try {
             const cableResponse = await axios.post('/api/pay-cable', {
               tvcode: selectedTV?.code,
-              pacakge_code: selectedTVPlan, 
+              pacakge_code: selectedTVPlan,
               SmartCardNo: formState.IUCNumber,
               PhoneNo: formState.phoneNumber,
+              amount: formState.amount,
             });
 
             if (cableResponse.data.status) {
@@ -340,27 +439,72 @@ const PayBillForm: React.FC = () => {
                 txn_type: 'Cable',
                 wallet_address: address,
                 status: 'success',
-                  reference: txHash,
-                  timestamp: new Date().toISOString(),
-                  refunded: false,
-                  phone_number: formState.phoneNumber,
-                  iuc_number: formState.IUCNumber,
-                  meter_number: formState.meterNumber,
-                  network: networkCode,
+                hash: txHash,
+                refcode: base_refcode,
+                timestamp: new Date().toISOString(),
+                refunded: false,
+                phone_number: formState.phoneNumber,
+                iuc_number: formState.IUCNumber,
+                meter_number: formState.meterNumber,
+                network: networkCode,
+                stark_amount: strkBaseAmount,
               });
-              setFormState({
-                phoneNumber: '',
-                amount: '',
-                IUCNumber: '',
-                meterNumber: '',
-              })
               setSuccessTxHash(txHash);
               setShowSuccessModal(true);
             } else {
+              await axios.post('/api/store-transaction', {
+                amount: formState.amount,
+                txn_type: 'Cable',
+                wallet_address: address,
+                status: 'failed',
+                hash: txHash,
+                refcode: base_refcode,
+                timestamp: new Date().toISOString(),
+                refunded: false,
+                phone_number: formState.phoneNumber,
+                iuc_number: formState.IUCNumber,
+                meter_number: formState.meterNumber,
+                network: networkCode,
+                stark_amount: strkBaseAmount,
+              });
               toast.error(cableResponse.data.msg || 'Failed to pay cable. You will be refunded');
+              setIsRefunded(true);
+              try {
+                const refundResponse = await axios.post('/api/refund', {
+                  isMainet: isMainnet,
+                  refcode: base_refcode,
+                  amountInSTRK: amountInSTRK,
+                });
+                if (refundResponse.data.status) {
+                  toast.success(
+                    'You refund has been confirmed, please check your wallet for the refund'
+                  );
+                }
+              } catch (error: any) {
+                toast.error(error?.message || 'Failed to refund. Our team has been notified');
+              } finally {
+                setIsRefunded(false);
+              }
             }
           } catch (error: any) {
             toast.error(error?.message || 'Failed to pay cable. You will be refunded');
+            setIsRefunded(true);
+            try {
+              const refundResponse = await axios.post('/api/refund', {
+                isMainet: isMainnet,
+                refcode: base_refcode,
+                amountInSTRK: amountInSTRK,
+              });
+              if (refundResponse.data.status) {
+                toast.success(
+                  'You refund has been confirmed, please check your wallet for the refund'
+                );
+              }
+            } catch (error: any) {
+              toast.error(error?.message || 'Failed to refund. Our team has been notified');
+            } finally {
+              setIsRefunded(false);
+            }
           }
         }
 
@@ -373,44 +517,92 @@ const PayBillForm: React.FC = () => {
               amount: formState.amount,
               phone_no: formState.phoneNumber,
             });
-              if (utilityResponse.data.status) {
+            if (utilityResponse.data.status) {
               await axios.post('/api/store-transaction', {
                 amount: formState.amount,
                 txn_type: 'Utility',
                 wallet_address: address,
                 status: 'success',
-                  reference: txHash,
-                  timestamp: new Date().toISOString(),
-                  refunded: false,
-                  phone_number: formState.phoneNumber,
-                  iuc_number: formState.IUCNumber,
-                  meter_number: formState.meterNumber,
-                  network: networkCode,
-                });
-              setFormState({
-                phoneNumber: '',
-                amount: '',
-                IUCNumber: '',
-                meterNumber: '',
-              })
+                hash: txHash,
+                refcode: base_refcode,
+                timestamp: new Date().toISOString(),
+                refunded: false,
+                phone_number: formState.phoneNumber,
+                iuc_number: formState.IUCNumber,
+                meter_number: formState.meterNumber,
+                network: networkCode,
+                stark_amount: strkBaseAmount,
+              });
               setSuccessTxHash(txHash);
               setShowSuccessModal(true);
             } else {
-              toast.error(utilityResponse.data.msg || 'Failed to pay utility. You will be refunded');
+              await axios.post('/api/store-transaction', {
+                amount: formState.amount,
+                txn_type: 'Utility',
+                wallet_address: address,
+                status: 'failed',
+                hash: txHash,
+                refcode: base_refcode,
+                timestamp: new Date().toISOString(),
+                refunded: false,
+                phone_number: formState.phoneNumber,
+                iuc_number: formState.IUCNumber,
+                meter_number: formState.meterNumber,
+                network: networkCode,
+                stark_amount: strkBaseAmount,
+              });
+              toast.error(
+                utilityResponse.data.msg || 'Failed to pay utility. You will be refunded'
+              );
+              setIsRefunded(true);
+              try {
+                const refundResponse = await axios.post('/api/refund', {
+                  isMainet: isMainnet,
+                  refcode: base_refcode,
+                  amountInSTRK: amountInSTRK,
+                });
+                if (refundResponse.data.status) {
+                  toast.success(
+                    'You refund has been confirmed, please check your wallet for the refund'
+                  );
+                }
+              } catch (error: any) {
+                toast.error(error?.message || 'Failed to refund. Our team has been notified');
+              } finally {
+                setIsRefunded(false);
+              }
             }
           } catch (error: any) {
             toast.error(error?.message || 'Failed to pay utility. You will be refunded');
+            setIsRefunded(true);
+            try {
+              const refundResponse = await axios.post('/api/refund', {
+                isMainet: isMainnet,
+                refcode: base_refcode,
+                amountInSTRK: amountInSTRK,
+              });
+              if (refundResponse.data.status) {
+                toast.success(
+                  'You refund has been confirmed, please check your wallet for the refund'
+                );
+              }
+            } catch (error: any) {
+              toast.error(error?.message || 'Failed to refund. Our team has been notified');
+            } finally {
+              setIsRefunded(false);
+            }
           }
         }
       } else {
         toast.error('Transaction failed');
       }
-
     } catch (error) {
       console.error('Error during contract calls:', error);
-      toast.error(error instanceof Error
-        ? `Contract interaction failed: ${error.message}`
-        : 'Contract interaction failed with unknown error')
+      toast.error(
+        error instanceof Error
+          ? `Contract interaction failed: ${error.message}`
+          : 'Contract interaction failed with unknown error'
+      );
     } finally {
       setIsBtnLoading(false);
     }
@@ -433,9 +625,10 @@ const PayBillForm: React.FC = () => {
     if (formState.amount && starkAmount) {
       const ngnAmount = parseFloat(formState.amount);
       const strkPrice = parseFloat(starkAmount);
-      const baseStrkAmount = (ngnAmount / strkPrice);
-      const feePercentage = 0.02; // 2%
-      const strkAmount = baseStrkAmount + (baseStrkAmount * feePercentage);
+      const baseStrkAmount = ngnAmount / strkPrice;
+      const feePercentage = 0.05; // 5%
+      const strkAmount = baseStrkAmount + baseStrkAmount * feePercentage;
+      setStrkBaseAmount(strkAmount);
       const amountInWei = BigInt(Math.floor(strkAmount * 1e18));
       setAmountInSTRK(Number(amountInWei));
     }
@@ -469,9 +662,12 @@ const PayBillForm: React.FC = () => {
   }, [chain]);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setShowTimeoutModal(true);
-    }, 15 * 60 * 1000);
+    const timeoutId = setTimeout(
+      () => {
+        setShowTimeoutModal(true);
+      },
+      15 * 60 * 1000
+    );
 
     return () => clearTimeout(timeoutId);
   }, []);
@@ -494,7 +690,7 @@ const PayBillForm: React.FC = () => {
         />
 
         <div className="hero-card border-[1px] border-stroke rounded-lg flex flex-col gap-3 p-8 backdrop-blur-xl mt-5">
-        {activeTab === 'buy-airtime' && (
+          {activeTab === 'buy-airtime' && (
             <>
               <InputField
                 id="phoneNumber"
@@ -505,7 +701,7 @@ const PayBillForm: React.FC = () => {
                 onChange={handleInputChange}
                 networkLogo={networkLogo}
                 max={11}
-                disabled={isBtnLoading}
+                disabled={isBtnLoading || isRefunded}
               />
 
               <InputField
@@ -514,10 +710,9 @@ const PayBillForm: React.FC = () => {
                 name="amount"
                 label="Airtime Amount"
                 placeholder="Enter amount"
-
                 value={formState.amount}
                 onChange={handleInputChange}
-                disabled={isBtnLoading}
+                disabled={isBtnLoading || isRefunded}
               />
             </>
           )}
@@ -534,7 +729,7 @@ const PayBillForm: React.FC = () => {
                 networkLogo={networkLogo}
                 type="numeric"
                 max={11}
-                disabled={isBtnLoading}
+                disabled={isBtnLoading || isRefunded}
               />
               {dataPlans && (
                 <SelectField
@@ -543,16 +738,16 @@ const PayBillForm: React.FC = () => {
                   onChange={(value) => {
                     if (typeof value === 'object' && 'PRODUCT_ID' in value) {
                       setSelectedPlan(value.PRODUCT_ID);
-                      setFormState(prev => ({
+                      setFormState((prev) => ({
                         ...prev,
-                        amount: value.PRODUCT_AMOUNT.toString()
+                        amount: value.PRODUCT_AMOUNT.toString(),
                       }));
                     }
                   }}
                   label="Select data plans"
                   options={dataPlans}
                   required={true}
-                  disabled={isBtnLoading}
+                  disabled={isBtnLoading || isRefunded}
                 />
               )}
             </>
@@ -567,13 +762,16 @@ const PayBillForm: React.FC = () => {
                     key={provider.code}
                     className={`p-2 ring-1 ring-primary rounded-lg flex items-center gap-3 transition-all cursor-pointer duration-200
                     ${selectedTV?.code === provider?.code ? 'ring-2 bg-primary' : ''}`}
-                    onClick={() =>
+                    onClick={() => {
+                      if (isBtnLoading || isRefunded) {
+                        return null;
+                      }
                       setSelectedTV({
                         name: provider.name,
                         code: provider.code,
                         img: provider.img,
-                      })
-                    }
+                      });
+                    }}
                   >
                     <img
                       src={provider.img}
@@ -594,9 +792,9 @@ const PayBillForm: React.FC = () => {
                     onChange={(value) => {
                       if (typeof value === 'object' && 'PACKAGE_ID' in value) {
                         setSelectedTVPlan(value.PACKAGE_ID);
-                        setFormState(prev => ({
+                        setFormState((prev) => ({
                           ...prev,
-                          amount: value.PACKAGE_AMOUNT.toString()
+                          amount: value.PACKAGE_AMOUNT.toString(),
                         }));
                       }
                     }}
@@ -604,7 +802,7 @@ const PayBillForm: React.FC = () => {
                     options={tVPlans}
                     required={true}
                     type="TV"
-                    disabled={isBtnLoading}
+                    disabled={isBtnLoading || isRefunded}
                   />
                   <InputField
                     id="iucNumber"
@@ -614,7 +812,7 @@ const PayBillForm: React.FC = () => {
                     value={formState.IUCNumber}
                     type="number"
                     onChange={handleInputChange}
-                    disabled={isBtnLoading}
+                    disabled={isBtnLoading || isRefunded}
                   />
                   <InputField
                     id="phoneNumber"
@@ -626,7 +824,7 @@ const PayBillForm: React.FC = () => {
                     networkLogo={networkLogo}
                     type="numeric"
                     max={11}
-                    disabled={isBtnLoading}
+                    disabled={isBtnLoading || isRefunded}
                   />
                 </>
               )}
@@ -647,7 +845,7 @@ const PayBillForm: React.FC = () => {
                   }
                 }}
                 type="electric"
-                disabled={isBtnLoading}
+                disabled={isBtnLoading || isRefunded}
               />
               {selectedUtility && utilityPlans.length > 0 && (
                 <>
@@ -662,7 +860,12 @@ const PayBillForm: React.FC = () => {
                         ? ' bg-primary text-white'
                         : ''
                     }`}
-                        onClick={() => setSelectedUtilityPlan(plan)}
+                        onClick={() => {
+                          if (isBtnLoading || isRefunded) {
+                            return null;
+                          }
+                          setSelectedUtilityPlan(plan);
+                        }}
                       >
                         {plan.PRODUCT_TYPE.toUpperCase()}
                       </button>
@@ -685,7 +888,7 @@ const PayBillForm: React.FC = () => {
                         meterNumber: e.target.value,
                       }))
                     }
-                    disabled={isBtnLoading}
+                    disabled={isBtnLoading || isRefunded}
                   />
 
                   <InputField
@@ -703,30 +906,62 @@ const PayBillForm: React.FC = () => {
                     }
                     min={selectedUtilityPlan.MINIMUN_AMOUNT}
                     max={selectedUtilityPlan.MAXIMUM_AMOUNT}
-                    disabled={isBtnLoading}
+                    disabled={isBtnLoading || isRefunded}
                   />
                 </>
               )}
             </>
           )}
           {starkAmount && address && account && formState?.amount && (
-            <div className="text-white text-sm">You will pay: {formatSTRKAmount(amountInSTRK)} STRK</div>
+            <div className="text-white text-sm">
+              You will pay: {formatSTRKAmount(amountInSTRK)} STRK
+            </div>
           )}
         </div>
 
-        <Button className="my-5 py-5 w-full flex items-center justify-center" onClick={handlePayment} disabled={isBtnLoading}>
-          {isBtnLoading ? <Loader2 className='animate-spin duration-500' color='white' /> : 'Pay now'}
+        <Button
+          className="my-5 py-5 w-full flex items-center justify-center"
+          onClick={handlePayment}
+          disabled={isBtnLoading || isRefunded}
+        >
+          {isBtnLoading || isRefunded ? (
+            <Loader2 className="animate-spin duration-500" color="white" />
+          ) : isRefunded ? (
+            'Please wait, refunding ...'
+          ) : (
+            'Pay now'
+          )}
         </Button>
       </div>
-      <TimeoutModal 
-        isOpen={showTimeoutModal} 
-        onClose={() => window.location.reload()} 
-      />
+      <TimeoutModal isOpen={showTimeoutModal} onClose={() => window.location.reload()} />
       <SuccessModal
         isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
+        onClose={() => {
+          setFormState({
+            phoneNumber: '',
+            amount: '',
+            IUCNumber: '',
+            meterNumber: '',
+          });
+          setShowSuccessModal(false);
+        }}
         txHash={successTxHash}
         isMainnet={isMainnet}
+        amount={formState.amount}
+        starkAmount={strkBaseAmount}
+        phoneNumber={formState.phoneNumber}
+        iucNumber={formState.IUCNumber}
+        meterNumber={formState.meterNumber}
+        network={networkCode}
+        txnType={
+          activeTab === 'buy-airtime'
+            ? 'Airtime'
+            : activeTab === 'buy-data'
+              ? 'Data'
+              : activeTab === 'pay-cable'
+                ? 'Cable'
+                : 'Utility'
+        }
       />
     </div>
   );
