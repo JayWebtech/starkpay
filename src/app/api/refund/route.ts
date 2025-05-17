@@ -179,9 +179,9 @@ export async function POST(req: NextRequest): Promise<Response> {
         constants.TRANSACTION_VERSION.V3
       );
 
-      const amountInWei = BigInt(Math.floor(Number(amountInSTRK) * 1e18));
-      const pre_amount = Number(amountInWei);
-      const amount = BigInt(pre_amount || 0);
+      // const amountInWei = BigInt(Math.floor(Number(amountInSTRK) * 1e18));
+      // const pre_amount = Number(amountInWei);
+      const amount = BigInt(amountInSTRK || 0);
       const low = amount & BigInt('0xffffffffffffffffffffffffffffffff');
       const high = amount >> BigInt(128);
 
@@ -224,9 +224,11 @@ export async function POST(req: NextRequest): Promise<Response> {
           .from('transactions')
           .update({ 
             refunded: true,
-            status: 'refunded'
+            status: 'failed'
           })
           .eq('refcode', refcode);
+
+          console.log(updateError)
 
           return new Response(
             JSON.stringify({

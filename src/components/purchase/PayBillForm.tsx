@@ -710,6 +710,8 @@ const PayBillForm: React.FC = () => {
                 name="amount"
                 label="Airtime Amount"
                 placeholder="Enter amount"
+                min={100}
+                max={200000}
                 value={formState.amount}
                 onChange={handleInputChange}
                 disabled={isBtnLoading || isRefunded}
@@ -920,14 +922,15 @@ const PayBillForm: React.FC = () => {
         </div>
 
         <Button
-          className="my-5 py-5 w-full flex items-center justify-center"
+          className="my-5 py-5 w-full flex gap-2 items-center justify-center"
           onClick={handlePayment}
           disabled={isBtnLoading || isRefunded}
         >
           {isBtnLoading || isRefunded ? (
-            <Loader2 className="animate-spin duration-500" color="white" />
-          ) : isRefunded ? (
-            'Please wait, refunding ...'
+            <>
+              <Loader2 className="animate-spin duration-500" color="white" />
+              {isRefunded ? 'Please wait, refunding...' : 'Please wait'}
+            </>
           ) : (
             'Pay now'
           )}
