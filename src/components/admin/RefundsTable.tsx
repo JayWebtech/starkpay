@@ -36,7 +36,7 @@ export default function RefundsTable() {
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
-        .eq('status', 'refund')
+        .eq('refunded', true)
         .order('created_at', { ascending: false })
         .range(from, to);
 
@@ -116,9 +116,7 @@ export default function RefundsTable() {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Amount
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User
-                </th>
+             
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date
                 </th>
@@ -137,13 +135,10 @@ export default function RefundsTable() {
               {refunds.map((refund) => (
                 <tr key={refund.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {formatId(refund.id)}
+                    {refund.id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatCurrency(refund.amount)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {refund.user_email || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(refund.created_at)}
