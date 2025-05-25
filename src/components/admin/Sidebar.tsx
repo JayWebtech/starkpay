@@ -12,7 +12,8 @@ import {
   TrendingUp,
   Users,
   Loader2,
-  Search
+  Search,
+  Clock
 } from 'lucide-react';
 
 type Analytics = {
@@ -38,6 +39,11 @@ export default function Sidebar() {
       name: 'Transactions',
       href: '/admin/transactions',
       icon: Receipt
+    },
+    {
+      name: 'Pending Transactions',
+      href: '/admin/pending-transactions',
+      icon: Clock
     },
     {
       name: 'Search',

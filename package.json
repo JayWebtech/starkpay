@@ -17,6 +17,7 @@
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.8.2",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.4.10",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.477.0",

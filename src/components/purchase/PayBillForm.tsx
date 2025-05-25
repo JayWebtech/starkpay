@@ -167,14 +167,14 @@ const PayBillForm: React.FC = () => {
   };
 
   const handlePayment = useCallback(async () => {
-    // if(!isMainnet) {
-    //   toast.error('You are currently on Testnet.');
-    //   return;
-    // }
-    // if(!isMainnet && parseFloat(formState.amount) > 100) {
-    //   toast.error('You are currently on Testnet. Maximum amount is 100');
-    //   return;
-    // }
+    if(!isMainnet) {
+      toast.error('You are currently on Testnet.');
+      return;
+    }
+    if(!isMainnet && parseFloat(formState.amount) > 100) {
+      toast.error('You are currently on Testnet. Maximum amount is 100');
+      return;
+    }
     if (!address || !account) {
       toast.error('Please connect your wallet to proceed');
       return;
@@ -261,14 +261,15 @@ const PayBillForm: React.FC = () => {
           wallet_address: address,
           amount: parseFloat(formState.amount),
           stark_amount: strkBaseAmount,
-          txn_type: activeTab === 'buy-airtime' 
-            ? 'Airtime' 
-            : activeTab === 'buy-data' 
-              ? 'Data' 
-              : activeTab === 'pay-cable' 
-                ? 'Cable' 
-                : 'Utility',
-          status: 'pending'
+          txn_type:
+            activeTab === 'buy-airtime'
+              ? 'Airtime'
+              : activeTab === 'buy-data'
+                ? 'Data'
+                : activeTab === 'pay-cable'
+                  ? 'Cable'
+                  : 'Utility',
+          status: 'pending',
         });
 
         if (!response?.data?.success) {
@@ -277,23 +278,27 @@ const PayBillForm: React.FC = () => {
 
         if (activeTab === 'buy-airtime') {
           try {
-            const airtimeResponse = await axios.post('/api/buy-airtime', {
-              networkCode,
-              phoneNumber: formState.phoneNumber,
-              amount: formState.amount,
-            }, {
-              headers: {
-                'x-transaction-hash': txHash,
-                'x-reference-code': base_refcode
+            const airtimeResponse = await axios.post(
+              '/api/buy-airtime',
+              {
+                networkCode,
+                phoneNumber: formState.phoneNumber,
+                amount: formState.amount,
+              },
+              {
+                headers: {
+                  'x-transaction-hash': txHash,
+                  'x-reference-code': base_refcode,
+                },
               }
-            });
+            );
 
             if (airtimeResponse.data.status) {
               // Update pending transaction status
               await axios.post('/api/update-pending-transaction', {
                 hash: txHash,
                 refcode: base_refcode,
-                status: 'completed'
+                status: 'completed',
               });
 
               // Store in main transactions table
@@ -320,7 +325,7 @@ const PayBillForm: React.FC = () => {
               await axios.post('/api/update-pending-transaction', {
                 hash: txHash,
                 refcode: base_refcode,
-                status: 'failed'
+                status: 'failed',
               });
 
               // Store failed transaction
@@ -366,7 +371,7 @@ const PayBillForm: React.FC = () => {
             await axios.post('/api/update-pending-transaction', {
               hash: txHash,
               refcode: base_refcode,
-              status: 'failed'
+              status: 'failed',
             });
             toast.error(error?.message || 'Failed to buy airtime. You will be refunded');
             setIsRefunded(true);
@@ -390,16 +395,20 @@ const PayBillForm: React.FC = () => {
         }
         if (activeTab === 'buy-data') {
           try {
-            const dataResponse = await axios.post('/api/buy-data', {
-              networkCode,
-              phoneNumber: formState.phoneNumber,
-              planId: selectedPlan,
-            }, {
-              headers: {
-                'x-transaction-hash': txHash,
-                'x-reference-code': base_refcode
+            const dataResponse = await axios.post(
+              '/api/buy-data',
+              {
+                networkCode,
+                phoneNumber: formState.phoneNumber,
+                planId: selectedPlan,
+              },
+              {
+                headers: {
+                  'x-transaction-hash': txHash,
+                  'x-reference-code': base_refcode,
+                },
               }
-            });
+            );
 
             if (dataResponse.data.status) {
               await axios.post('/api/store-transaction', {
@@ -480,18 +489,22 @@ const PayBillForm: React.FC = () => {
 
         if (activeTab === 'pay-cable') {
           try {
-            const cableResponse = await axios.post('/api/pay-cable', {
-              tvcode: selectedTV?.code,
-              pacakge_code: selectedTVPlan,
-              SmartCardNo: formState.IUCNumber,
-              PhoneNo: formState.phoneNumber,
-              amount: formState.amount,
-            }, {
-              headers: {
-                'x-transaction-hash': txHash,
-                'x-reference-code': base_refcode
+            const cableResponse = await axios.post(
+              '/api/pay-cable',
+              {
+                tvcode: selectedTV?.code,
+                pacakge_code: selectedTVPlan,
+                SmartCardNo: formState.IUCNumber,
+                PhoneNo: formState.phoneNumber,
+                amount: formState.amount,
+              },
+              {
+                headers: {
+                  'x-transaction-hash': txHash,
+                  'x-reference-code': base_refcode,
+                },
               }
-            });
+            );
 
             if (cableResponse.data.status) {
               await axios.post('/api/store-transaction', {
@@ -572,18 +585,22 @@ const PayBillForm: React.FC = () => {
 
         if (activeTab === 'pay-utility') {
           try {
-            const utilityResponse = await axios.post('/api/pay-utility', {
-              electric_company_code: selectedUtility,
-              meter_type: selectedUtilityPlan?.PRODUCT_TYPE,
-              meter_no: formState.meterNumber,
-              amount: formState.amount,
-              phone_no: formState.phoneNumber,
-            }, {
-              headers: {
-                'x-transaction-hash': txHash,
-                'x-reference-code': base_refcode
+            const utilityResponse = await axios.post(
+              '/api/pay-utility',
+              {
+                electric_company_code: selectedUtility,
+                meter_type: selectedUtilityPlan?.PRODUCT_TYPE,
+                meter_no: formState.meterNumber,
+                amount: formState.amount,
+                phone_no: formState.phoneNumber,
+              },
+              {
+                headers: {
+                  'x-transaction-hash': txHash,
+                  'x-reference-code': base_refcode,
+                },
               }
-            });
+            );
             if (utilityResponse.data.status) {
               await axios.post('/api/store-transaction', {
                 amount: formState.amount,
