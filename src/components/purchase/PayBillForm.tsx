@@ -167,7 +167,7 @@ const PayBillForm: React.FC = () => {
     }
   };
 
-  const handlePayment = useCallback(async () => {
+  const handlePayment = () => {
     console.log(account);
     if (!isMainnet) {
       toast.error('You are currently on Testnet.');
@@ -695,7 +695,7 @@ const PayBillForm: React.FC = () => {
     } finally {
       setIsBtnLoading(false);
     }
-  }, [formState, address, amountInSTRK, account]);
+  };
 
   const getStarkAmount = useCallback(async () => {
     try {
