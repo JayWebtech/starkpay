@@ -167,7 +167,7 @@ const PayBillForm: React.FC = () => {
     }
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     console.log(account);
     if (!isMainnet) {
       toast.error('You are currently on Testnet.');
