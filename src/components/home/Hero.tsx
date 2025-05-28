@@ -21,7 +21,7 @@ const Hero: React.FC = () => {
             transition={{ duration: 1, delay: 0.3, ease: 'easeOut' }}
             className="font-orbitron text-white text-[1.6em] md:text-[2.5rem] font-bold"
           >
-            Pay bills swiftly with Starknet 🚀
+            Pay bills swiftly with Paystrata 🚀
           </motion.h4>
           <motion.p
             initial={{ opacity: 0, y: -20 }}
