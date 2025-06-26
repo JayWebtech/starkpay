@@ -29,7 +29,7 @@ export function Providers({ children }: ProvidersProps) {
   const rpc = useCallback((chain: Chain) => {
     return {
       //nodeUrl: `https://starknet-sepolia.drpc.org`,
-      nodeUrl: `https://starknet.api.onfinality.io/public`
+      nodeUrl: `https://starknet-sepolia.public.blastapi.io`
     };
   }, []);
 
