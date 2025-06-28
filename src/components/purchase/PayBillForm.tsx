@@ -167,10 +167,10 @@ const PayBillForm: React.FC = () => {
 
   const handlePayment = async () => {
     console.log(account);
-    // if (!isMainnet) {
-    //   toast.error('You are currently on Testnet.');
-    //   return;
-    // }
+    if (!isMainnet) {
+      toast.error('You are currently on Testnet.');
+      return;
+    }
     if (!isMainnet && parseFloat(formState.amount) > 100) {
       toast.error('You are currently on Testnet. Maximum amount is 100');
       return;
