@@ -61,6 +61,9 @@ const PayBillForm: React.FC = () => {
   const CONTRACT_ADDRESS = getContractAddress(isMainnet);
   const SUPPORTED_TOKENS = getSupportedTokens(isMainnet);
 
+  // API base URL for the Node.js backend
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api';
+
   const detectProvider = useCallback(
     (number: string) => {
       if (number.length >= 4) {
@@ -100,7 +103,7 @@ const PayBillForm: React.FC = () => {
   const getDataPlans = useCallback(async (network: string) => {
     setIsLoading(true);
     try {
-      const response = await axios.post('/api/get-data-plans', { network });
+      const response = await axios.get(`${API_BASE}/data/plans?networkCode=${network}`);
       if (response.data.status) {
         setDataPlans(response?.data?.data[0]?.PRODUCT);
       }
@@ -109,14 +112,12 @@ const PayBillForm: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [API_BASE]);
 
   const getTVPlans = useCallback(async (providerCode: string) => {
     setIsLoading(true);
     try {
-      const response = await axios.post('/api/get-cable-plans', {
-        providerCode,
-      });
+      const response = await axios.get(`${API_BASE}/cable/plans?provider=${providerCode}`);
       if (response.data.status) {
         setTVPlans(response.data.data);
       } else {
@@ -127,14 +128,12 @@ const PayBillForm: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [API_BASE]);
 
   const getUtilityPlans = useCallback(async (providerCode: string) => {
     setIsLoading(true);
     try {
-      const response = await axios.post('/api/get-utility-plans', {
-        providerCode,
-      });
+      const response = await axios.get(`${API_BASE}/utility/plans?provider=${providerCode}`);
 
       if (response.data.status) {
         setUtilityPlans(response.data.data);
@@ -148,7 +147,7 @@ const PayBillForm: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [API_BASE]);
 
   const getTxnType = () => {
     switch (activeTab) {
@@ -167,10 +166,10 @@ const PayBillForm: React.FC = () => {
 
   const handlePayment = async () => {
     console.log(account);
-    if (!isMainnet) {
-      toast.error('You are currently on Testnet.');
-      return;
-    }
+    // if (!isMainnet) {
+    //   toast.error('You are currently on Testnet.');
+    //   return;
+    // }
     if (!isMainnet && parseFloat(formState.amount) > 100) {
       toast.error('You are currently on Testnet. Maximum amount is 100');
       return;
@@ -256,7 +255,7 @@ const PayBillForm: React.FC = () => {
 
       if (receiptStatus.statusReceipt === 'success') {
         // Store in pending_transactions first
-        const response = await axios.post('/api/store-pending-transaction', {
+        const response = await axios.post(`${API_BASE}/pending-transactions/store`, {
           hash: txHash,
           refcode: base_refcode,
           wallet_address: address,
@@ -280,7 +279,7 @@ const PayBillForm: React.FC = () => {
         if (activeTab === 'buy-airtime') {
           try {
             const airtimeResponse = await axios.post(
-              '/api/buy-airtime',
+              `${API_BASE}/airtime/buy`,
               {
                 networkCode,
                 phoneNumber: formState.phoneNumber,
@@ -296,14 +295,12 @@ const PayBillForm: React.FC = () => {
 
             if (airtimeResponse.data.status) {
               // Update pending transaction status
-              await axios.post('/api/update-pending-transaction', {
-                hash: txHash,
-                refcode: base_refcode,
+              await axios.put(`${API_BASE}/pending-transactions/${base_refcode}/update`, {
                 status: 'completed',
               });
 
               // Store in main transactions table
-              await axios.post('/api/store-transaction', {
+              await axios.post(`${API_BASE}/transactions/store`, {
                 amount: formState.amount,
                 txn_type: 'Airtime',
                 wallet_address: address,
@@ -312,25 +309,47 @@ const PayBillForm: React.FC = () => {
                 refcode: base_refcode,
                 timestamp: new Date().toISOString(),
                 refunded: false,
-                used: true,
                 phone_number: formState.phoneNumber,
                 iuc_number: formState.IUCNumber,
                 meter_number: formState.meterNumber,
                 network: networkCode,
                 stark_amount: strkBaseAmount,
               });
+
+              // Submit STRK to USDT swap request (async)
+              try {
+                const swapResponse = await axios.post(`${API_BASE}/swap/submit`, {
+                  amount: strkBaseAmount,
+                  fromToken: 'STRK',
+                  toToken: 'USDT',
+                  userAddress: address,
+                  refcode: base_refcode,
+                });
+
+                console.log('Swap request submitted:', swapResponse.data);
+                
+                // You can store the jobId to check status later
+                const jobId = swapResponse.data.jobId;
+                
+                // Optionally, you can poll for status or let user check manually
+                // For now, we'll just log it
+                console.log('Swap job ID:', jobId);
+                
+              } catch (swapError) {
+                console.error('Failed to submit swap request:', swapError);
+                // Don't fail the main transaction if swap fails
+              }
+              
               setSuccessTxHash(txHash);
               setShowSuccessModal(true);
             } else {
               // Update pending transaction status to failed
-              await axios.post('/api/update-pending-transaction', {
-                hash: txHash,
-                refcode: base_refcode,
+              await axios.put(`${API_BASE}/pending-transactions/${base_refcode}/update`, {
                 status: 'failed',
               });
 
               // Store failed transaction
-              await axios.post('/api/store-transaction', {
+              await axios.post(`${API_BASE}/transactions/store`, {
                 amount: formState.amount,
                 txn_type: 'Airtime',
                 wallet_address: address,
@@ -339,7 +358,6 @@ const PayBillForm: React.FC = () => {
                 refcode: base_refcode,
                 timestamp: new Date().toISOString(),
                 refunded: false,
-                used: false,
                 phone_number: formState.phoneNumber,
                 iuc_number: formState.IUCNumber,
                 meter_number: formState.meterNumber,
@@ -351,7 +369,7 @@ const PayBillForm: React.FC = () => {
               );
               setIsRefunded(true);
               try {
-                const refundResponse = await axios.post('/api/refund', {
+                const refundResponse = await axios.post(`${API_BASE}/refunds/process`, {
                   isMainet: isMainnet,
                   refcode: base_refcode,
                   amountInSTRK: amountInSTRK,
@@ -369,15 +387,13 @@ const PayBillForm: React.FC = () => {
             }
           } catch (error: any) {
             // Update pending transaction status to failed
-            await axios.post('/api/update-pending-transaction', {
-              hash: txHash,
-              refcode: base_refcode,
+            await axios.put(`${API_BASE}/pending-transactions/${base_refcode}/update`, {
               status: 'failed',
             });
             toast.error(error?.message || 'Failed to buy airtime. You will be refunded');
             setIsRefunded(true);
             try {
-              const refundResponse = await axios.post('/api/refund', {
+              const refundResponse = await axios.post(`${API_BASE}/refunds/process`, {
                 isMainet: isMainnet,
                 refcode: base_refcode,
                 amountInSTRK: amountInSTRK,
@@ -397,11 +413,12 @@ const PayBillForm: React.FC = () => {
         if (activeTab === 'buy-data') {
           try {
             const dataResponse = await axios.post(
-              '/api/buy-data',
+              `${API_BASE}/data/buy`,
               {
                 networkCode,
                 phoneNumber: formState.phoneNumber,
                 planId: selectedPlan,
+                amount: formState.amount,
               },
               {
                 headers: {
@@ -412,7 +429,7 @@ const PayBillForm: React.FC = () => {
             );
 
             if (dataResponse.data.status) {
-              await axios.post('/api/store-transaction', {
+              await axios.post(`${API_BASE}/transactions/store`, {
                 amount: formState.amount,
                 txn_type: 'Data',
                 wallet_address: address,
@@ -421,7 +438,6 @@ const PayBillForm: React.FC = () => {
                 refcode: base_refcode,
                 timestamp: new Date().toISOString(),
                 refunded: false,
-                used: true,
                 phone_number: formState.phoneNumber,
                 iuc_number: formState.IUCNumber,
                 meter_number: formState.meterNumber,
@@ -431,7 +447,7 @@ const PayBillForm: React.FC = () => {
               setSuccessTxHash(txHash);
               setShowSuccessModal(true);
             } else {
-              await axios.post('/api/store-transaction', {
+              await axios.post(`${API_BASE}/transactions/store`, {
                 amount: formState.amount,
                 txn_type: 'Data',
                 wallet_address: address,
@@ -440,7 +456,6 @@ const PayBillForm: React.FC = () => {
                 refcode: base_refcode,
                 timestamp: new Date().toISOString(),
                 refunded: false,
-                used: true,
                 phone_number: formState.phoneNumber,
                 iuc_number: formState.IUCNumber,
                 meter_number: formState.meterNumber,
@@ -450,7 +465,7 @@ const PayBillForm: React.FC = () => {
               toast.error(dataResponse.data.msg || 'Failed to buy data');
               setIsRefunded(true);
               try {
-                const refundResponse = await axios.post('/api/refund', {
+                const refundResponse = await axios.post(`${API_BASE}/refunds/process`, {
                   isMainet: isMainnet,
                   refcode: base_refcode,
                   amountInSTRK: amountInSTRK,
@@ -470,7 +485,7 @@ const PayBillForm: React.FC = () => {
             toast.error(error?.message || 'Failed to buy data');
             setIsRefunded(true);
             try {
-              const refundResponse = await axios.post('/api/refund', {
+              const refundResponse = await axios.post(`${API_BASE}/refunds/process`, {
                 isMainet: isMainnet,
                 refcode: base_refcode,
                 amountInSTRK: amountInSTRK,
@@ -491,12 +506,11 @@ const PayBillForm: React.FC = () => {
         if (activeTab === 'pay-cable') {
           try {
             const cableResponse = await axios.post(
-              '/api/pay-cable',
+              `${API_BASE}/cable/pay`,
               {
-                tvcode: selectedTV?.code,
-                pacakge_code: selectedTVPlan,
-                SmartCardNo: formState.IUCNumber,
-                PhoneNo: formState.phoneNumber,
+                provider: selectedTV?.name,
+                iucNumber: formState.IUCNumber,
+                planId: selectedTVPlan,
                 amount: formState.amount,
               },
               {
@@ -508,7 +522,7 @@ const PayBillForm: React.FC = () => {
             );
 
             if (cableResponse.data.status) {
-              await axios.post('/api/store-transaction', {
+              await axios.post(`${API_BASE}/transactions/store`, {
                 amount: formState.amount,
                 txn_type: 'Cable',
                 wallet_address: address,
@@ -517,7 +531,6 @@ const PayBillForm: React.FC = () => {
                 refcode: base_refcode,
                 timestamp: new Date().toISOString(),
                 refunded: false,
-                used: true,
                 phone_number: formState.phoneNumber,
                 iuc_number: formState.IUCNumber,
                 meter_number: formState.meterNumber,
@@ -527,7 +540,7 @@ const PayBillForm: React.FC = () => {
               setSuccessTxHash(txHash);
               setShowSuccessModal(true);
             } else {
-              await axios.post('/api/store-transaction', {
+              await axios.post(`${API_BASE}/transactions/store`, {
                 amount: formState.amount,
                 txn_type: 'Cable',
                 wallet_address: address,
@@ -536,7 +549,6 @@ const PayBillForm: React.FC = () => {
                 refcode: base_refcode,
                 timestamp: new Date().toISOString(),
                 refunded: false,
-                used: true,
                 phone_number: formState.phoneNumber,
                 iuc_number: formState.IUCNumber,
                 meter_number: formState.meterNumber,
@@ -546,7 +558,7 @@ const PayBillForm: React.FC = () => {
               toast.error(cableResponse.data.msg || 'Failed to pay cable. You will be refunded');
               setIsRefunded(true);
               try {
-                const refundResponse = await axios.post('/api/refund', {
+                const refundResponse = await axios.post(`${API_BASE}/refunds/process`, {
                   isMainet: isMainnet,
                   refcode: base_refcode,
                   amountInSTRK: amountInSTRK,
@@ -566,7 +578,7 @@ const PayBillForm: React.FC = () => {
             toast.error(error?.message || 'Failed to pay cable. You will be refunded');
             setIsRefunded(true);
             try {
-              const refundResponse = await axios.post('/api/refund', {
+              const refundResponse = await axios.post(`${API_BASE}/refunds/process`, {
                 isMainet: isMainnet,
                 refcode: base_refcode,
                 amountInSTRK: amountInSTRK,
@@ -587,13 +599,12 @@ const PayBillForm: React.FC = () => {
         if (activeTab === 'pay-utility') {
           try {
             const utilityResponse = await axios.post(
-              '/api/pay-utility',
+              `${API_BASE}/utility/pay`,
               {
-                electric_company_code: selectedUtility,
-                meter_type: selectedUtilityPlan?.PRODUCT_TYPE,
-                meter_no: formState.meterNumber,
+                provider: selectedUtility,
+                meterNumber: formState.meterNumber,
+                planId: selectedUtilityPlan?.PRODUCT_ID,
                 amount: formState.amount,
-                phone_no: formState.phoneNumber,
               },
               {
                 headers: {
@@ -603,7 +614,7 @@ const PayBillForm: React.FC = () => {
               }
             );
             if (utilityResponse.data.status) {
-              await axios.post('/api/store-transaction', {
+              await axios.post(`${API_BASE}/transactions/store`, {
                 amount: formState.amount,
                 txn_type: 'Utility',
                 wallet_address: address,
@@ -612,7 +623,6 @@ const PayBillForm: React.FC = () => {
                 refcode: base_refcode,
                 timestamp: new Date().toISOString(),
                 refunded: false,
-                used: true,
                 phone_number: formState.phoneNumber,
                 iuc_number: formState.IUCNumber,
                 meter_number: formState.meterNumber,
@@ -622,7 +632,7 @@ const PayBillForm: React.FC = () => {
               setSuccessTxHash(txHash);
               setShowSuccessModal(true);
             } else {
-              await axios.post('/api/store-transaction', {
+              await axios.post(`${API_BASE}/transactions/store`, {
                 amount: formState.amount,
                 txn_type: 'Utility',
                 wallet_address: address,
@@ -631,7 +641,6 @@ const PayBillForm: React.FC = () => {
                 refcode: base_refcode,
                 timestamp: new Date().toISOString(),
                 refunded: false,
-                used: true,
                 phone_number: formState.phoneNumber,
                 iuc_number: formState.IUCNumber,
                 meter_number: formState.meterNumber,
@@ -643,7 +652,7 @@ const PayBillForm: React.FC = () => {
               );
               setIsRefunded(true);
               try {
-                const refundResponse = await axios.post('/api/refund', {
+                const refundResponse = await axios.post(`${API_BASE}/refunds/process`, {
                   isMainet: isMainnet,
                   refcode: base_refcode,
                   amountInSTRK: amountInSTRK,
@@ -663,7 +672,7 @@ const PayBillForm: React.FC = () => {
             toast.error(error?.message || 'Failed to pay utility. You will be refunded');
             setIsRefunded(true);
             try {
-              const refundResponse = await axios.post('/api/refund', {
+              const refundResponse = await axios.post(`${API_BASE}/refunds/process`, {
                 isMainet: isMainnet,
                 refcode: base_refcode,
                 amountInSTRK: amountInSTRK,
@@ -697,7 +706,7 @@ const PayBillForm: React.FC = () => {
 
   const getStarkAmount = useCallback(async () => {
     try {
-      const response = await axios.post('/api/get-stark-price');
+      const response = await axios.get(`${API_BASE}/stark-price`);
       if (response?.data?.status) {
         setStarkAmount(response?.data?.data?.starknet?.ngn);
       } else {
@@ -706,7 +715,7 @@ const PayBillForm: React.FC = () => {
     } catch (error: any) {
       toast.error(error?.message || 'Failed to fetch Stark amount, try again');
     }
-  }, []);
+  }, [API_BASE]);
 
   useEffect(() => {
     if (formState.amount && starkAmount) {
@@ -729,7 +738,7 @@ const PayBillForm: React.FC = () => {
 
   useEffect(() => {
     getStarkAmount();
-  }, []);
+  }, [getStarkAmount]);
 
   useEffect(() => {
     if (!chain) return;
