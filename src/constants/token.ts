@@ -21,7 +21,7 @@ export interface TokenOption {
   }) as Readonly<Record<string, Readonly<TokenOption>>>;
   
   export const TESTNET_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_TESTNET_CONTRACT_ADDRESS;
-  export const MAINNET_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_TESTNET_CONTRACT_ADDRESS;
+  export const MAINNET_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_MAINNET_CONTRACT_ADDRESS;
   
   export const getContractAddress = (isMainnet: boolean) => 
     isMainnet ? MAINNET_CONTRACT_ADDRESS : TESTNET_CONTRACT_ADDRESS;

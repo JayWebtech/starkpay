@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { query } from '../config/database';
-import { AutoSwappr, TOKEN_ADDRESSES } from 'autoswappr-sdk';
+import { AutoSwappr, TOKEN_ADDRESSES } from 'autoswap-sdk';
 
 const router = express.Router();
 
@@ -163,7 +163,7 @@ router.post('/submit', async (req: Request<{}, {}, SwapRequest>, res: Response):
       status: true,
       message: 'Swap request submitted successfully',
       jobId,
-      status: 'pending'
+      jobStatus: 'pending'
     });
 
   } catch (error: any) {

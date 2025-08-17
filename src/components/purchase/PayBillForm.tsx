@@ -166,10 +166,10 @@ const PayBillForm: React.FC = () => {
 
   const handlePayment = async () => {
     console.log(account);
-    // if (!isMainnet) {
-    //   toast.error('You are currently on Testnet.');
-    //   return;
-    // }
+    if (!isMainnet) {
+      toast.error('You are currently on Testnet.');
+      return;
+    }
     if (!isMainnet && parseFloat(formState.amount) > 100) {
       toast.error('You are currently on Testnet. Maximum amount is 100');
       return;
@@ -233,6 +233,7 @@ const PayBillForm: React.FC = () => {
     console.log('low', low);
     console.log('high', high);
     console.log('amount', amount, amountInSTRK);
+    console.log('CA', CONTRACT_ADDRESS);
 
     try {
       setIsBtnLoading(true);
@@ -248,7 +249,15 @@ const PayBillForm: React.FC = () => {
           calldata: [refcode.toString(), low.toString(), high.toString(), type?.toString() || ''],
         },
       ];
-      const result = await account?.execute(calls);
+      //const feeEstimation = await account.estimateInvokeFee(calls, { version: 3 });
+
+      const result = await account.execute(calls
+      //   {
+      //   version: 3,
+      //   resourceBounds: feeEstimation.resourceBounds,
+      // }
+    );
+      
       txHash = result?.transaction_hash;
 
       const receiptStatus = await account.waitForTransaction(txHash);
@@ -327,13 +336,6 @@ const PayBillForm: React.FC = () => {
                 });
 
                 console.log('Swap request submitted:', swapResponse.data);
-                
-                // You can store the jobId to check status later
-                const jobId = swapResponse.data.jobId;
-                
-                // Optionally, you can poll for status or let user check manually
-                // For now, we'll just log it
-                console.log('Swap job ID:', jobId);
                 
               } catch (swapError) {
                 console.error('Failed to submit swap request:', swapError);
@@ -765,7 +767,9 @@ const PayBillForm: React.FC = () => {
       15 * 60 * 1000
     );
 
-    return () => clearTimeout(timeoutId);
+    if(!isBtnLoading) {
+      return () => clearTimeout(timeoutId);
+    }
   }, []);
 
   return (
