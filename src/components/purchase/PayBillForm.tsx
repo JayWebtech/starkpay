@@ -516,6 +516,7 @@ const PayBillForm: React.FC = () => {
                 iucNumber: formState.IUCNumber,
                 planId: selectedTVPlan,
                 amount: formState.amount,
+                phoneNumber: formState.phoneNumber,
               },
               {
                 headers: {

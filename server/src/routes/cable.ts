@@ -8,6 +8,7 @@ interface CableRequest {
   iucNumber: string;
   planId: string;
   amount: number;
+  phoneNumber: string;
 }
 
 interface CableResponse {
@@ -54,15 +55,38 @@ router.get('/plans', async (req: Request, res: Response): Promise<void> => {
       {
         params: {
           UserID: process.env.NEXT_USER_ID,
-          CableTV: providerCode,
-          APIKey: process.env.NEXT_PRIVATE_KEY,
         },
       }
     );
 
+    console.log('Cable plans response status:', response.status);
+    console.log('Cable plans response data keys:', Object.keys(response.data));
+
+    const tvData = response.data?.TV_ID;
+    
+    if (!tvData) {
+      res.status(404).json({
+        status: false,
+        msg: 'No cable TV data found'
+      });
+      return;
+    }
+
+    // Find the specific provider's data
+    const providerData = tvData[providerCode];
+    
+    if (!providerData || !providerData[0] || !providerData[0].PRODUCT) {
+      res.status(404).json({
+        status: false,
+        msg: `No plans found for provider: ${provider}`
+      });
+      return;
+    }
+
+    // Return the PRODUCT array which contains the plans
     res.json({
       status: true,
-      data: response.data
+      data: providerData[0].PRODUCT
     });
 
   } catch (error: any) {
@@ -84,7 +108,7 @@ router.get('/plans', async (req: Request, res: Response): Promise<void> => {
 // Pay cable TV
 router.post('/pay', async (req: Request<{}, {}, CableRequest>, res: Response): Promise<void> => {
   try {
-    const { provider, iucNumber, planId, amount } = req.body;
+    const { provider, iucNumber, planId, amount, phoneNumber } = req.body;
 
     if (!provider || !iucNumber || !planId || !amount) {
       res.status(400).json({
@@ -117,11 +141,11 @@ router.post('/pay', async (req: Request<{}, {}, CableRequest>, res: Response): P
       {
         params: {
           UserID: process.env.NEXT_USER_ID,
-          CableTV: providerCode,
-          IUC: iucNumber,
-          CablePlan: planId,
-          Amount: amount,
           APIKey: process.env.NEXT_PRIVATE_KEY,
+          CableTV: providerCode,
+          Package: planId,
+          SmartCardNo: iucNumber,
+          PhoneNo: phoneNumber,
         },
       }
     );
@@ -149,6 +173,14 @@ router.post('/pay', async (req: Request<{}, {}, CableRequest>, res: Response): P
 
   } catch (error: any) {
     console.error('Cable TV payment error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      params: error.config?.params,
+      responseData: error.response?.data ? String(error.response.data).substring(0, 500) : 'No response data'
+    });
     res.status(500).json({
       status: false,
       message: `${error.message}. You will be refunded` || 'Error paying cable TV. You will be refunded',
