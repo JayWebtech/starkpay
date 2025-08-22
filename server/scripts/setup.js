@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const bcrypt = require('bcryptjs');
-const { query } = require('../dist/config/database');
+const { query } = require('../src/config/database');
 
 async function createAdminUser() {
   try {
@@ -42,7 +42,7 @@ async function setupDatabase() {
     console.log('🗄️  Initializing database...');
     
     // Initialize database tables
-    const { initDatabase } = require('../dist/config/database');
+    const { initDatabase } = require('../src/config/database');
     await initDatabase();
     
     console.log('✅ Database initialized successfully');

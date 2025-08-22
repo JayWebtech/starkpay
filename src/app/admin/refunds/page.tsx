@@ -17,9 +17,9 @@ export default function AdminRefunds() {
 
   useEffect(() => {
     if (!adminService.isAuthenticated()) {
-      router.push('/admin/login');
-      return;
-    }
+        router.push('/admin/login');
+        return;
+      }
 
     loadRefunds();
   }, [currentPage, router]);
@@ -111,9 +111,9 @@ export default function AdminRefunds() {
       <div className="flex h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
+        <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-indigo-600 mx-auto mb-4" />
-            <p className="text-gray-600">Loading refunds...</p>
+          <p className="text-gray-600">Loading refunds...</p>
           </div>
         </div>
       </div>

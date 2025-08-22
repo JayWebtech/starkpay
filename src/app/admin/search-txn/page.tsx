@@ -24,7 +24,7 @@ export default function AdminSearchTransactions() {
     try {
       setIsSearching(true);
       setHasSearched(true);
-      
+
       let response;
       if (searchType === 'reference') {
         response = await adminService.searchTransactions(searchTerm);
@@ -74,7 +74,7 @@ export default function AdminSearchTransactions() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
-      <Sidebar />
+        <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm border-b border-gray-200">
           <div className="px-4 sm:px-6 lg:px-8 py-4">
@@ -92,11 +92,11 @@ export default function AdminSearchTransactions() {
             {/* Search Form */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
               <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
+                  <div className="flex-1">
+                    <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
+                      <input
+                        type="text"
                       placeholder={`Search by ${searchType === 'reference' ? 'reference code' : 'wallet address'}...`}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
@@ -116,7 +116,7 @@ export default function AdminSearchTransactions() {
                     <option value="wallet">Wallet Address</option>
                   </select>
                   
-                  <button
+                    <button
                     onClick={handleSearch}
                     disabled={isSearching}
                                          className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -131,10 +131,10 @@ export default function AdminSearchTransactions() {
                         <Search className="h-4 w-4" />
                         Search
                       </>
-                    )}
-                  </button>
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
             </div>
 
             {/* Search Results */}
@@ -155,33 +155,33 @@ export default function AdminSearchTransactions() {
                     <p className="text-gray-600">Searching transactions...</p>
                   </div>
                 ) : searchResults.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Transaction
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Amount
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Type
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Date
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Amount
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
                         {searchResults.map((transaction) => (
-                          <tr key={transaction.id} className="hover:bg-gray-50">
+                        <tr key={transaction.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div>
                                 <div className="text-sm font-medium text-gray-900">
@@ -191,7 +191,7 @@ export default function AdminSearchTransactions() {
                                   {transaction.wallet_address.slice(0, 8)}...{transaction.wallet_address.slice(-6)}
                                 </div>
                               </div>
-                            </td>
+                          </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm font-medium text-gray-900">
                                 {formatCurrency(transaction.amount)}
@@ -201,7 +201,7 @@ export default function AdminSearchTransactions() {
                                   {transaction.stark_amount.toFixed(4)} STRK
                                 </div>
                               )}
-                            </td>
+                          </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm text-gray-900 capitalize">
                                 {transaction.txn_type.replace('_', ' ')}
@@ -211,15 +211,15 @@ export default function AdminSearchTransactions() {
                                   {transaction.network}
                                 </div>
                               )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(transaction.status)}`}>
-                                {transaction.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {transaction.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {formatDate(transaction.created_at)}
-                            </td>
+                          </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                          <button className="text-primary hover:text-primary2 mr-3">
                              View
@@ -227,13 +227,13 @@ export default function AdminSearchTransactions() {
                               {transaction.status === 'success' && !transaction.refunded && (
                                 <button className="text-red-600 hover:text-red-900">
                                   Refund
-                                </button>
+                            </button>
                               )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                   </div>
                 ) : (
                   <div className="text-center py-12">

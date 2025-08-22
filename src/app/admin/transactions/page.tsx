@@ -25,9 +25,9 @@ export default function AdminTransactions() {
 
   useEffect(() => {
     if (!adminService.isAuthenticated()) {
-      router.push('/admin/login');
-      return;
-    }
+        router.push('/admin/login');
+        return;
+      }
 
     loadTransactions();
   }, [currentPage, router]);
@@ -42,7 +42,7 @@ export default function AdminTransactions() {
       console.error('Error loading transactions:', error);
       if (error.response?.status === 401) {
         adminService.logout();
-        router.push('/admin/login');
+          router.push('/admin/login');
       } else {
         toast.error('Failed to load transactions');
       }
@@ -54,8 +54,8 @@ export default function AdminTransactions() {
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
       loadTransactions();
-      return;
-    }
+          return;
+        }
 
     try {
       setIsLoading(true);
@@ -66,7 +66,7 @@ export default function AdminTransactions() {
       console.error('Error searching transactions:', error);
       toast.error('Failed to search transactions');
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
 
@@ -241,10 +241,10 @@ export default function AdminTransactions() {
       <div className="flex h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
+        <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-indigo-600 mx-auto mb-4" />
-            <p className="text-gray-600">Loading transactions...</p>
-                  </div>
+          <p className="text-gray-600">Loading transactions...</p>
+        </div>
       </div>
 
       {/* Transaction Receipt Modal */}
@@ -253,9 +253,9 @@ export default function AdminTransactions() {
         isOpen={isReceiptModalOpen}
         onClose={closeReceiptModal}
       />
-    </div>
-  );
-}
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
