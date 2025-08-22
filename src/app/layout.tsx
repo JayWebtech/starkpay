@@ -3,6 +3,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { Toaster } from 'react-hot-toast';
 import { ReactNode } from 'react';
+import NextTopLoader from 'nextjs-toploader';
 
 const sora = Sora({
   variable: '--font-sora',
@@ -69,6 +70,17 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body className={`${sora.variable} ${orbitron.variable} antialiased`}>
+        <NextTopLoader 
+          color="#a869f4"
+          initialPosition={0.08}
+          crawlSpeed={200}
+          height={3}
+          crawl={true}
+          showSpinner={false}
+          easing="ease"
+          speed={200}
+          shadow="0 0 10px #a869f4,0 0 5px #a869f4"
+        />
         <Toaster />
         <Providers>{children}</Providers>
       </body>
