@@ -28,12 +28,33 @@ router.get('/plans', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Map provider names to API format
+    const getProviderCode = (providerName: string): string => {
+      switch (providerName.toLowerCase()) {
+        case 'dstv':
+          return 'DSTV';
+        case 'gotv':
+          return 'GOTV';
+        case 'startimes':
+          return 'STARTIMES';
+        case 'showmax':
+          return 'SHOWMAX';
+        default:
+          return providerName.toUpperCase();
+      }
+    };
+
+    const providerCode = getProviderCode(provider as string);
+    
+    console.log('Fetching cable plans for provider:', providerCode);
+    console.log('API URL:', `${process.env.NEXT_PUBLIC_BASE_URL}/GetCablePlansV1.asp`);
+
     const response = await axios.get<CableResponse>(
       `${process.env.NEXT_PUBLIC_BASE_URL}/GetCablePlansV1.asp`,
       {
         params: {
           UserID: process.env.NEXT_USER_ID,
-          CableTV: provider,
+          CableTV: providerCode,
           APIKey: process.env.NEXT_PRIVATE_KEY,
         },
       }
@@ -46,6 +67,13 @@ router.get('/plans', async (req: Request, res: Response): Promise<void> => {
 
   } catch (error: any) {
     console.error('Error fetching cable plans:', error);
+    console.error('Error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      params: error.config?.params
+    });
     res.status(500).json({
       status: false,
       message: 'Failed to fetch cable plans'
@@ -66,12 +94,30 @@ router.post('/pay', async (req: Request<{}, {}, CableRequest>, res: Response): P
       return;
     }
 
+    // Map provider names to API format
+    const getProviderCode = (providerName: string): string => {
+      switch (providerName.toLowerCase()) {
+        case 'dstv':
+          return 'DSTV';
+        case 'gotv':
+          return 'GOTV';
+        case 'startimes':
+          return 'STARTIMES';
+        case 'showmax':
+          return 'SHOWMAX';
+        default:
+          return providerName.toUpperCase();
+      }
+    };
+
+    const providerCode = getProviderCode(provider);
+
     const response = await axios.get<CableResponse>(
       `${process.env.NEXT_PUBLIC_BASE_URL}/APICableTVV1.asp`,
       {
         params: {
           UserID: process.env.NEXT_USER_ID,
-          CableTV: provider,
+          CableTV: providerCode,
           IUC: iucNumber,
           CablePlan: planId,
           Amount: amount,

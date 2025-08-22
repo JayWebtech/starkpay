@@ -44,15 +44,14 @@ router.post('/buy', async (req: Request<{}, {}, DataRequest>, res: Response): Pr
     }
 
     const response = await axios.get<DataResponse>(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/APIDataV1.asp`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/APIDatabundleV1.asp`,
       {
         params: {
           UserID: process.env.NEXT_USER_ID,
           MobileNetwork: getNetworkCode(networkCode),
           MobileNumber: phoneNumber,
-          DataPlan: planId,
-          Amount: amount,
           APIKey: process.env.NEXT_PRIVATE_KEY,
+          DataPlan: planId,
         },
       }
     );
@@ -80,6 +79,14 @@ router.post('/buy', async (req: Request<{}, {}, DataRequest>, res: Response): Pr
 
   } catch (error: any) {
     console.error('Data purchase error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      params: error.config?.params,
+      responseData: error.response?.data ? String(error.response.data).substring(0, 500) : 'No response data'
+    });
     res.status(500).json({
       status: false,
       message: `${error.message}. You will be refunded` || 'Error buying data. You will be refunded',
@@ -100,24 +107,48 @@ router.get('/plans', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    const networkCodeMapped = getNetworkCode(networkCode as string);
+    
+    console.log('Fetching data plans for network:', networkCode, '-> mapped to:', networkCodeMapped);
+    console.log('API URL:', `${process.env.NEXT_PUBLIC_BASE_URL}/APIDatabundlePlansV2.asp`);
+
     const response = await axios.get<DataResponse>(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/GetDataPlansV1.asp`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/APIDatabundlePlansV2.asp`,
       {
         params: {
           UserID: process.env.NEXT_USER_ID,
-          MobileNetwork: getNetworkCode(networkCode as string),
-          APIKey: process.env.NEXT_PRIVATE_KEY,
         },
       }
     );
 
+    console.log('Data plans response status:', response.status);
+    console.log('Data plans response data keys:', Object.keys(response.data));
+
+    const data = response.data.MOBILE_NETWORK;
+
+    if (!data[networkCode as string]) {
+      res.status(404).json({
+        status: false,
+        msg: 'Data network not found'
+      });
+      return;
+    }
+
     res.json({
       status: true,
-      data: response.data
+      data: data[networkCode as string]
     });
 
   } catch (error: any) {
     console.error('Error fetching data plans:', error);
+    console.error('Error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      params: error.config?.params,
+      responseData: error.response?.data ? String(error.response.data).substring(0, 500) : 'No response data'
+    });
     res.status(500).json({
       status: false,
       message: 'Failed to fetch data plans'

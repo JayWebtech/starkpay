@@ -29,23 +29,49 @@ router.get('/plans', async (req: Request, res: Response): Promise<void> => {
     }
 
     const response = await axios.get<UtilityResponse>(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/GetUtilityPlansV1.asp`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/APIElectricityDiscosV1.asp`,
       {
         params: {
           UserID: process.env.NEXT_USER_ID,
-          Utility: provider,
-          APIKey: process.env.NEXT_PRIVATE_KEY,
         },
       }
     );
 
+    const allProviders = response.data?.ELECTRIC_COMPANY;
+
+    if (!allProviders) {
+      res.status(404).json({
+        status: false,
+        msg: 'No electricity providers found'
+      });
+      return;
+    }
+
+    const selectedProvider = allProviders[provider as string]?.[0];
+
+    if (!selectedProvider) {
+      res.status(404).json({
+        status: false,
+        msg: 'Provider not found'
+      });
+      return;
+    }
+
     res.json({
       status: true,
-      data: response.data
+      data: selectedProvider.PRODUCT
     });
 
   } catch (error: any) {
     console.error('Error fetching utility plans:', error);
+    console.error('Error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      params: error.config?.params,
+      responseData: error.response?.data ? String(error.response.data).substring(0, 500) : 'No response data'
+    });
     res.status(500).json({
       status: false,
       message: 'Failed to fetch utility plans'
@@ -67,15 +93,16 @@ router.post('/pay', async (req: Request<{}, {}, UtilityRequest>, res: Response):
     }
 
     const response = await axios.get<UtilityResponse>(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/APIUtilityV1.asp`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/APIElectricityV1.asp`,
       {
         params: {
           UserID: process.env.NEXT_USER_ID,
-          Utility: provider,
-          MeterNumber: meterNumber,
-          UtilityPlan: planId,
-          Amount: amount,
           APIKey: process.env.NEXT_PRIVATE_KEY,
+          ElectricCompany: provider,
+          MeterType: planId,
+          MeterNo: meterNumber,
+          Amount: amount,
+          PhoneNo: '08012345678', // Default phone number since it's required by API
         },
       }
     );
@@ -103,6 +130,14 @@ router.post('/pay', async (req: Request<{}, {}, UtilityRequest>, res: Response):
 
   } catch (error: any) {
     console.error('Utility payment error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      params: error.config?.params,
+      responseData: error.response?.data ? String(error.response.data).substring(0, 500) : 'No response data'
+    });
     res.status(500).json({
       status: false,
       message: `${error.message}. You will be refunded` || 'Error paying utility. You will be refunded',
