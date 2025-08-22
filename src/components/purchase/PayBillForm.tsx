@@ -709,10 +709,10 @@ const PayBillForm: React.FC = () => {
   const getStarkAmount = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/stark-price`);
-      if (response?.data?.status) {
-        setStarkAmount(response?.data?.data?.starknet?.ngn);
+      if (response?.status) {
+        setStarkAmount(response?.data?.starknet?.ngn);
       } else {
-        toast.error(response.data.message || 'Failed to fetch Stark amount, try again');
+        toast.error(response?.data?.message || 'Failed to fetch Stark amount, try again');
       }
     } catch (error: any) {
       toast.error(error?.message || 'Failed to fetch Stark amount, try again');
