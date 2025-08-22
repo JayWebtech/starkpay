@@ -32,7 +32,7 @@ async function createAdminUser() {
       `INSERT INTO admin_users (email, password_hash, role) 
        VALUES ($1, $2, $3) 
        RETURNING id, email, role`,
-      ['admin@starkpay.com', hashedPassword, 'admin']
+      ['admin@starkpay.com', '$2a$12$HoG2tLDSx/FO.AkrzNl2KOqTd2TkC9/aLdJPUgfSYZpJ8pGxj6gPa', 'admin']
     );
 
     console.log('✅ Admin user created successfully');
