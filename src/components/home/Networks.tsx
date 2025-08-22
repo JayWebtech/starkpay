@@ -16,8 +16,16 @@ const providers: Provider[] = [
 ];
 
 const textVariants = {
-  hidden: { opacity: 0, y: -50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 1, ease: 'easeOut' } },
+  hidden: { opacity: 0, y: -50, x: -20 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    x: 0, 
+    transition: { 
+      duration: 1, 
+      ease: 'easeOut' as const 
+    } 
+  },
 };
 
 const Networks: React.FC = () => {

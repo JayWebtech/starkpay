@@ -31,11 +31,11 @@ const cardVariants = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.8, ease: 'easeOut' },
+    transition: { duration: 0.8, ease: 'easeOut' as const },
   },
   hover: {
     scale: 1.05,
-    transition: { duration: 0.3, ease: 'easeInOut' },
+    transition: { duration: 0.3, ease: 'easeInOut' as const },
   },
 };
 
