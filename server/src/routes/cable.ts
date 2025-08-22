@@ -50,7 +50,7 @@ router.get('/plans', async (req: Request, res: Response): Promise<void> => {
     console.log('API URL:', `${process.env.NEXT_PUBLIC_BASE_URL}/GetCablePlansV1.asp`);
 
     const response = await axios.get<CableResponse>(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/GetCablePlansV1.asp`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/APICableTVPackagesV2.asp`,
       {
         params: {
           UserID: process.env.NEXT_USER_ID,
