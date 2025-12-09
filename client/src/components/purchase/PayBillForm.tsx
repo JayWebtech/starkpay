@@ -17,7 +17,7 @@ import { nanoid } from 'nanoid';
 import { getSupportedTokens, getContractAddress } from '@/constants/token';
 import { formatSTRKAmount } from '@/utils/formatStrkAmount';
 import TimeoutModal from '../modal/TimeoutModal';
-import { Loader2, Wallet, ArrowRight } from 'lucide-react';
+import { Loader2, Wallet, ArrowRight, Plane, Hotel, Lightbulb, Smartphone, Wifi, Tv, House } from 'lucide-react';
 import SuccessModal from '../modal/SuccessModal';
 import { motion } from 'framer-motion';
 
@@ -33,8 +33,31 @@ interface FormState {
  * Main payment interface for all utility bill types
  * Handles airtime, data, cable TV, and electricity payments
  */
+/**
+ * PayBillForm Component
+ * Main payment interface for all utility bill types
+ * Handles airtime, data, cable TV, and electricity payments
+ */
+
+import { Tab } from './Tabs';
+
+const mainTabs: Tab[] = [
+  { name: 'Utility', id: 'utility', icon: <House className="w-4 h-4 sm:w-5 sm:h-5" /> },
+  { name: 'Flight', id: 'flight', icon: <Plane className="w-4 h-4 sm:w-5 sm:h-5" /> },
+  { name: 'Hotels', id: 'hotels', icon: <Hotel className="w-4 h-4 sm:w-5 sm:h-5" /> },
+];
+
+const utilityTabs: Tab[] = [
+  { name: 'Airtime', id: 'buy-airtime', icon: <Smartphone className="w-4 h-4 sm:w-5 sm:h-5" /> },
+  { name: 'Data', id: 'buy-data', icon: <Wifi className="w-4 h-4 sm:w-5 sm:h-5" /> },
+  { name: 'Cable', id: 'pay-cable', icon: <Tv className="w-4 h-4 sm:w-5 sm:h-5" /> },
+  { name: 'Electricity', id: 'pay-utility', icon: <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5" /> },
+];
+
 const PayBillForm: React.FC = () => {
   // Form state
+  const [activeCategory, setActiveCategory] = useState<string>('utility');
+
   const [activeTab, setActiveTab] = useState<string>('buy-airtime');
   const [formState, setFormState] = useState<FormState>({
     phoneNumber: '',
@@ -774,22 +797,50 @@ const PayBillForm: React.FC = () => {
         {/* Loading Indicator */}
         {isLoading && <LoadingIndicator />}
 
-        {/* Tabs */}
-        <Tabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          setPhoneNumber={(number: string) =>
-            setFormState((prev) => ({ ...prev, phoneNumber: number }))
-          }
-          setNetworkLogo={setNetworkLogo}
-          setDataPlans={setDataPlans}
-          setIsLoading={setIsLoading}
-          isLoading={isLoading}
-          setFormState={setFormState}
-        />
+        {/* Main Tabs */}
+        <div className="mb-6">
+          <Tabs
+            tabs={mainTabs}
+            activeTab={activeCategory}
+            setActiveTab={setActiveCategory}
+          />
+        </div>
+
+        {/* Utility Sub-tabs */}
+        {activeCategory === 'utility' && (
+          <Tabs
+            tabs={utilityTabs}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onTabChange={(tabId) => {
+              setFormState((prev) => ({
+                 ...prev,
+                 phoneNumber: '',
+                 amount: '',
+                 IUCNumber: '',
+                 meterNumber: '',
+              }));
+              setNetworkLogo(null);
+              setDataPlans(null);
+            }}
+            setIsLoading={setIsLoading}
+            isLoading={isLoading}
+          />
+        )}
+
+        {/* Placeholder for other categories */}
+        {activeCategory !== 'utility' && (
+           <div className="glass-card rounded-2xl p-6 mt-4 text-center">
+             <h2 className="text-xl font-bold text-white mb-2">Coming Soon</h2>
+             <p className="text-text-secondary">This feature is currently under development.</p>
+           </div>
+        )}
 
         {/* Form Card */}
+        {activeCategory === 'utility' && (
+        <>
         <div className="glass-card rounded-2xl p-6 mt-4">
+
           {/* Airtime Form */}
           {activeTab === 'buy-airtime' && (
             <>
@@ -1069,6 +1120,8 @@ const PayBillForm: React.FC = () => {
         <p className="text-center text-text-muted text-xs mt-4">
           Secured by Starknet blockchain
         </p>
+        </>
+        )}
       </motion.div>
 
       {/* Modals */}

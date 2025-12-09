@@ -21,7 +21,7 @@ const features: Feature[] = [
   {
     title: 'Lightning Fast',
     description:
-      'Transactions complete in under 2 seconds. No waiting, no delays—just instant payments.',
+      'Transactions complete in under 2 seconds. No waiting, no delays, just instant payments.',
     icon: <Zap className="w-6 h-6" />,
     gradient: 'from-primary/20 to-primary/5',
     iconBg: 'bg-primary/20 text-primary',
@@ -29,7 +29,7 @@ const features: Feature[] = [
   {
     title: 'Ultra Low Fees',
     description:
-      'Pay only 0.1% transaction fees. Keep more of your money where it belongs—with you.',
+      'Pay only 0.1% transaction fees. Keep more of your money where it belongs, with you.',
     icon: <TrendingDown className="w-6 h-6" />,
     gradient: 'from-[#00A8E8]/20 to-[#00A8E8]/5',
     iconBg: 'bg-[#00A8E8]/20 text-[#00A8E8]',

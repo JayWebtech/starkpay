@@ -70,7 +70,7 @@ const Networks: React.FC = () => {
           </h2>
           <p className="text-text-secondary text-lg leading-relaxed mb-6">
             Paystrata leverages the power of Starknet to offer seamless, low-fee, 
-            and instant utility payments. No banks, no delays—just fast and 
+            and instant utility payments. No banks, no delays, just fast and 
             decentralized transactions.
           </p>
           <p className="text-text-secondary mb-8">

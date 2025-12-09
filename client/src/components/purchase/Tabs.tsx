@@ -1,37 +1,24 @@
 'use client';
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Smartphone, Wifi, Tv, Lightbulb } from 'lucide-react';
 
 /**
  * Tab configuration
  */
-interface Tab {
+export interface Tab {
   name: string;
   id: string;
   icon: React.ReactNode;
 }
 
 interface TabsProps {
+  tabs: Tab[];
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  setIsLoading: (loading: boolean) => void;
-  isLoading: boolean;
-  setPhoneNumber?: (number: string) => void;
-  setNetworkLogo?: (logo: string | null) => void;
-  setDataPlans?: (plans: any) => void;
-  setFormState?: (state: any) => void;
+  setIsLoading?: (loading: boolean) => void;
+  isLoading?: boolean;
+  onTabChange?: (tabId: string) => void;
 }
-
-/**
- * Available tabs
- */
-const tabs: Tab[] = [
-  { name: 'Airtime', id: 'buy-airtime', icon: <Smartphone className="w-4 h-4 sm:w-5 sm:h-5" /> },
-  { name: 'Data', id: 'buy-data', icon: <Wifi className="w-4 h-4 sm:w-5 sm:h-5" /> },
-  { name: 'Cable', id: 'pay-cable', icon: <Tv className="w-4 h-4 sm:w-5 sm:h-5" /> },
-  { name: 'Utility', id: 'pay-utility', icon: <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5" /> },
-];
 
 /**
  * Tabs Component
@@ -39,32 +26,18 @@ const tabs: Tab[] = [
  * Features animated underline indicator and hover effects
  */
 const Tabs: React.FC<TabsProps> = ({
+  tabs,
   activeTab,
   setActiveTab,
   setIsLoading,
   isLoading,
-  setPhoneNumber,
-  setNetworkLogo,
-  setDataPlans,
-  setFormState,
+  onTabChange,
 }) => {
   // Handle tab change
   const handleTabChange = (tabId: string) => {
-    setIsLoading(false);
+    if (setIsLoading) setIsLoading(false);
     setActiveTab(tabId);
-    
-    // Reset form state
-    if (setPhoneNumber) setPhoneNumber('');
-    if (setNetworkLogo) setNetworkLogo(null);
-    if (setDataPlans) setDataPlans(null);
-    if (setFormState) {
-      setFormState({
-        phoneNumber: '',
-        amount: '',
-        IUCNumber: '',
-        meterNumber: '',
-      });
-    }
+    if (onTabChange) onTabChange(tabId);
   };
 
   return (
@@ -103,7 +76,7 @@ const Tabs: React.FC<TabsProps> = ({
               {/* Active Indicator */}
               {isActive && (
                 <motion.div
-                  layoutId="activeTab"
+                  layoutId={tabs[0].id + "activeTab"}
                   className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-primary to-[#00A8E8] rounded-full"
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
