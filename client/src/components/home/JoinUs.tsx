@@ -22,7 +22,7 @@ const cards: Card[] = [
     id: 1,
     title: 'Instant Payments',
     description:
-      'Buy airtime and mobile data instantly with decentralized transactions on Starknet. Fast, low-cost, and secure.',
+      'Buy airtime and mobile data, book hotels and flights instantly with decentralized transactions on Starknet. Fast, low-cost, and secure.',
     icon: <Zap className="w-7 h-7" />,
     accent: 'primary',
   },

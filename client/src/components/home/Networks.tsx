@@ -75,7 +75,8 @@ const Networks: React.FC = () => {
           </p>
           <p className="text-text-secondary mb-8">
             Buy airtime and data from top Nigerian mobile networks, pay your 
-            cable TV subscriptions, and settle electricity bills effortlessly. 
+            cable TV subscriptions, settle electricity bills, and book hotels 
+            and flights effortlessly. 
             Experience next-gen payments today!
           </p>
           

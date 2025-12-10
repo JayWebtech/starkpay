@@ -96,7 +96,7 @@ const WhyChooseUs: React.FC = () => {
           Built for the Future
         </h2>
         <p className="text-text-secondary text-lg max-w-2xl mx-auto">
-          Experience the next generation of utility payments with blockchain technology
+          Experience the next generation of utility payments, hotel bookings, and flights with blockchain technology
         </p>
       </motion.div>
 
