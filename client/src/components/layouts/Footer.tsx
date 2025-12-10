@@ -64,7 +64,7 @@ const Footer: React.FC = () => {
             </Link>
             
             <p className="text-text-secondary max-w-sm mb-6">
-              The future of utility payments. Fast, secure, and decentralized 
+              The future of utility payments, hotel bookings, and flights. Fast, secure, and decentralized 
               payments powered by Starknet blockchain technology.
             </p>
 

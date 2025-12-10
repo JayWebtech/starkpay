@@ -76,7 +76,7 @@ const Hero: React.FC = () => {
             className="text-text-secondary max-w-2xl text-lg leading-relaxed mb-8"
           >
             Experience seamless utility payments on Starknet. Buy airtime, data, 
-            pay for cable TV and electricity all with lightning fast blockchain 
+            pay for cable TV and electricity, book hotels and flights, all with lightning fast blockchain 
             transactions and minimal fees.
           </motion.p>
 
